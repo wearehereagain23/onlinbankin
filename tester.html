@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Money Transfer Alert - OnlinBankin</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0d1117;
+            font-family: Arial, sans-serif;
+            color: #e6edf3;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #161b22;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 170, 0.2);
+        }
+
+        .header {
+            background: linear-gradient(90deg, #0f5132, #198754);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header img {
+            width: 90px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .header h3 {
+            color: #00ffae;
+            margin: 10px 0 5px;
+        }
+
+        .alert-title {
+            font-size: 20px;
+            text-align: center;
+            color: #79c0ff;
+            margin: 20px;
+        }
+
+        .details {
+            padding: 0 20px 20px;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        .detail-table th,
+        .detail-table td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        .detail-table th {
+            background-color: rgba(0, 255, 170, 0.08);
+            color: #00ffae;
+            font-weight: bold;
+            width: 35%;
+        }
+
+        .detail-table td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .status {
+            font-weight: bold;
+            color: #00ffae;
+        }
+
+        .footer {
+            background: #0d1117;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #8b949e;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        a {
+            color: #00ffae;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <img src="https://tkolyezukxoefqjzhqar.supabase.co/storage/v1/object/public/logos/IMG_0122.PNG"
+                alt="OnlinBankin Logo">
+            <h3>OnlinBankin</h3>
+            <p>Your futuristic financial gateway</p>
+        </div>
+
+        <!-- Alert Title -->
+        <div class="alert-title">
+            🚀 Transaction Alert — Funds Transferred Successfully
+        </div>
+
+        <!-- Transaction Details -->
+        <div class="details">
+            <table class="detail-table">
+                <tr>
+                    <th>Amount</th>
+                    <td style="color: white;">${info.amount}</td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <td>${info.date}</td>
+                </tr>
+                <tr>
+                    <th>Name</th>
+                    <td>${info.name}</td>
+                </tr>
+                <tr>
+                    <th>Description</th>
+                    <td>${info.description}</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td class="status">✅ ${info.status}</td>
+                </tr>
+                <tr>
+                    <th>Bank Name</th>
+                    <td>${info.bankName}</td>
+                </tr>
+                <tr>
+                    <th>Transaction Ref</th>
+                    <td>${info.ref}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            This is an automated notification from <strong>OnlinBankin</strong>.
+            If you did not authorize this transaction, please <a
+                href="https://onlinbankin.web.app/contact/index.html">contact support immediately</a>.
+            <br><br>© 2025 OnlinBankin. All rights reserved.
+        </div>
+    </div>
+</body>
+
+</html>
