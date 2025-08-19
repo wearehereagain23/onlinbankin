@@ -4,7 +4,18 @@ const app = express();
 const port = 9000
 const nodemailer = require("nodemailer");
 const path = require('path');
+require("dotenv").config();
+const webpush = require("web-push");
 
+
+const publicVapidKey = process.env.PUBLIC_VAPID_KEY;
+const privateVapidKey = process.env.PRIVATE_VAPID_KEY;
+
+webpush.setVapidDetails(
+    "mailto:example@yourdomain.com",
+    publicVapidKey,
+    privateVapidKey
+);
 
 
 app.use(
@@ -15,6 +26,10 @@ app.use(
 
 app.use(express.json());
 
+// passing the vapid key to frontend route
+app.get("/vapidPublicKey", (req, res) => {
+    res.json({ key: process.env.PUBLIC_VAPID_KEY });
+});
 
 
 const ff = path.join(__dirname, '/src')
@@ -25,6 +40,22 @@ app.get('/', (request, response) => {
     response.sendFile(__dirname + '/src')
 });
 
+
+
+// 📩 Route: Subscribe + Send Notification
+app.post("/subscribe", (req, res) => {
+    const { subscription, title, message } = req.body;
+    res.status(201).json({});
+
+    const payload = JSON.stringify({
+        title: title || "📢 Default Title",
+        body: message || "This is a default notification.",
+        icon: "https://tkolyezukxoefqjzhqar.supabase.co/storage/v1/object/public/logos/IMG_0122.PNG",
+        tag: "live-update" // 👈 fixed tag so notifications replace each other
+    });
+
+    webpush.sendNotification(subscription, payload).catch(err => console.error(err));
+});
 
 
 

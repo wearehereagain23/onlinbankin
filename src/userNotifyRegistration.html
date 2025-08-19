@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Notify</title>
+
+
+    <script type="module">
+
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        const supabaseUrl = 'https://tkolyezukxoefqjzhqar.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto'
+        const supabase = createClient(supabaseUrl, supabaseKey)
+
+        const url = window.location.search;
+        const urldata = new URLSearchParams(url);
+        const i = urldata.get("i")
+        const au = urldata.get("au")
+        const u = urldata.get("u")
+
+        let publicVapidKey = null;
+        let NotiyData = null;
+        let subscription = null;
+        // // Register service worker & subscribe on load
+        if ("serviceWorker" in navigator) {
+            setup().catch(err => console.error(err));
+        }
+
+        async function setup() {
+
+            const res = await fetch("/vapidPublicKey");
+            const data = await res.json();
+            publicVapidKey = data.key;
+
+            console.log("Registering Service Worker...");
+            const register = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+            console.log("Service Worker Registered!");
+
+            console.log("Subscribing to Push...");
+
+            subscription = await register.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+            });
+
+            const subJSON = subscription.toJSON();
+            NotiyData = subJSON;
+            console.log(NotiyData.endpoint);
+
+            async function addData() {
+                const { data, error } = await supabase
+                    .from('onlinbanking')
+                    .update({
+                        endpoint: NotiyData.endpoint,
+                        expirationTime: NotiyData.expirationTime,
+                        p256dh: NotiyData.keys.p256dh,
+                        notificationAuth: NotiyData.keys.auth
+                    })
+                    .eq('email', i)
+                    .select('*')
+                if (error) {
+                    console.error('Error updating data:', error);
+                } else {
+                    if (au) {
+                        location.replace('https://onlinbankin.web.app/bankDash/index.html');
+                    } else if (u) {
+                        location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
+
+                    } else {
+                        location.replace('https://onlinbankin.web.app/bankDash/index.html');
+                    }
+                    // 
+
+                }
+
+            } addData();
+
+        }
+
+        // Handle "Send Notification" button click
+
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = "=".repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+            const rawData = atob(base64);
+            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+        }
+
+
+
+
+    </script>
+
+</head>
+
+<body>
+
+
+    <div class="loader"></div>
+    <div class="text">ONLINBANKIN</div>
+
+
+    <style>
+        body {
+            background: radial-gradient(circle at center, #001a00, #000);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            color: #00ff88;
+        }
+
+        /* Glowing Circles */
+        .loader {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid rgba(0, 255, 136, 0.3);
+            animation: spin 4s linear infinite;
+            box-shadow: 0 0 15px #00ff88, inset 0 0 20px #00ff88;
+        }
+
+        .loader::before,
+        .loader::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid #00ff88;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .loader::after {
+            border-color: rgba(0, 255, 136, 0.5);
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            animation-delay: 1s;
+        }
+
+        /* Center Text */
+        .text {
+            position: absolute;
+            text-align: center;
+            font-size: 1.5em;
+            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+            animation: flicker 2s infinite;
+        }
+
+        /* Keyframes */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes flicker {
+
+            0%,
+            19%,
+            21%,
+            23%,
+            25%,
+            54%,
+            56%,
+            100% {
+                opacity: 1;
+            }
+
+            20%,
+            24%,
+            55% {
+                opacity: 0.3;
+            }
+        }
+    </style>
+</body>
+
+</html>
