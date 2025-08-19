@@ -1,21 +1,16 @@
-self.addEventListener("push", function (event) {
-    let data = {};
-
-    try {
-        data = event.data.json();
-    } catch (e) {
-        console.error("Push event but no JSON data", e);
-        data = { title: "📢 Default Title", body: "This is a default body." };
-    }
-
-    const title = data.title || "📢 Default Title";
-    const options = {
-        body: data.body || "This is a default notification.",
-        icon: data.icon || "/icon.png",
-        tag: data.tag || "default-tag"
-    };
-
+self.addEventListener("install", (event) => {
+    console.log("Service Worker installing…");
     event.waitUntil(
-        self.registration.showNotification(title, options)
+        caches.open("v1").then((cache) => {
+            return cache.addAll(["/", "/international.html", "/manifest.json"]);
+        })
+    );
+});
+
+self.addEventListener("fetch", (event) => {
+    event.respondWith(
+        caches.match(event.request).then((resp) => {
+            return resp || fetch(event.request);
+        })
     );
 });
