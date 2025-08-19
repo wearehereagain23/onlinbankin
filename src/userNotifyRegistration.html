@@ -38,9 +38,12 @@
             const register = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
             console.log("Service Worker Registered!");
 
+            // ✅ Wait until service worker is ready
+            const serviceWorkerReady = await navigator.serviceWorker.ready;
+
             console.log("Subscribing to Push...");
 
-            subscription = await register.pushManager.subscribe({
+            subscription = await serviceWorkerReady.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
             });
