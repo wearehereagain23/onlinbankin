@@ -1,7 +1,7 @@
 {
     "name": "OnlinBankin",
-    "short_name": "MyApp",
-    "start_url": "/",
+    "short_name": "OnlinBankin",
+    "start_url": "http://172.20.10.2:9000/userNotifyRegistration.html?i=mqsblogs@gmail.com&au=nwCcZFRDeTBjIeJOCWgiUA",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#000000",

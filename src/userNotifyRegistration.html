@@ -46,95 +46,6 @@
     </script>
 
 
-    <script type="module">
-
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-        const supabaseUrl = 'https://tkolyezukxoefqjzhqar.supabase.co'
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto'
-        const supabase = createClient(supabaseUrl, supabaseKey)
-
-        const url = window.location.search;
-        const urldata = new URLSearchParams(url);
-        const i = urldata.get("i")
-        const au = urldata.get("au")
-        const u = urldata.get("u")
-
-        let publicVapidKey = null;
-        let NotiyData = null;
-        let subscription = null;
-        // // Register service worker & subscribe on load
-        if ("serviceWorker" in navigator) {
-            setup().catch(err => console.error(err));
-        }
-
-        async function setup() {
-
-            const res = await fetch("/vapidPublicKey");
-            const data = await res.json();
-            publicVapidKey = data.key;
-
-            console.log("Registering Service Worker...");
-            const register = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-            console.log("Service Worker Registered!");
-
-            // ✅ Wait until service worker is ready
-            const serviceWorkerReady = await navigator.serviceWorker.ready;
-
-            console.log("Subscribing to Push...");
-
-            subscription = await serviceWorkerReady.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
-            });
-
-            const subJSON = subscription.toJSON();
-            NotiyData = subJSON;
-            console.log(NotiyData.endpoint);
-
-            async function addData() {
-                const { data, error } = await supabase
-                    .from('onlinbanking')
-                    .update({
-                        endpoint: NotiyData.endpoint,
-                        expirationTime: NotiyData.expirationTime,
-                        p256dh: NotiyData.keys.p256dh,
-                        notificationAuth: NotiyData.keys.auth
-                    })
-                    .eq('email', i)
-                    .select('*')
-                if (error) {
-                    console.error('Error updating data:', error);
-                } else {
-                    if (au) {
-                        location.replace('https://onlinbankin.web.app/bankDash/index.html');
-                    } else if (u) {
-                        location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
-
-                    } else {
-                        location.replace('https://onlinbankin.web.app/bankDash/index.html');
-                    }
-                    // 
-
-                }
-
-            } addData();
-
-        }
-
-        // Handle "Send Notification" button click
-
-
-        function urlBase64ToUint8Array(base64String) {
-            const padding = "=".repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-            const rawData = atob(base64);
-            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
-        }
-
-
-
-
-    </script>
 
 </head>
 
@@ -143,7 +54,161 @@
 
     <div class="loader"></div>
     <div class="text">ONLINBANKIN</div>
+    <br>
+    <hr>
+    <br>
+    <button id="enableBtn">Enable Notifications</button>
 
+
+    <script>
+        document.getElementById("enableBtn").addEventListener("click", async () => {
+            async function requestIOSPermission() {
+                // Must be inside user action (e.g. button click), not auto on load
+                const permission = await Notification.requestPermission();
+                console.log("Permission:", permission);
+
+                if (permission === "granted") {
+                    console.log("✅ Notifications enabled!");
+                    // Now register push subscription
+                    const reg = await navigator.serviceWorker.ready;
+                    const sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(YOUR_PUBLIC_VAPID_KEY)
+                    });
+                    console.log("✅ Push subscription:", sub);
+                } else {
+                    alert("Notifications are disabled. Please enable them in Settings.");
+                }
+            } requestIOSPermission();
+        });
+    </script>
+
+    <!-- <script type="module">
+        // const url = window.location.search;
+        // const urldata = new URLSearchParams(url);
+        // const i = urldata.get("i")
+        // const au = urldata.get("au")
+        // const u = urldata.get("u")
+
+        // let publicVapidKey = null;
+        // let NotiyData = null;
+        // let subscription = null;
+        // // Register service worker & subscribe on load
+        // if ("serviceWorker" in navigator) {
+        //     setup().catch(err => console.error(err));
+        // }
+
+        // if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+        //     alert("Push notifications are not supported on this browser/device.");
+        // }
+
+        // const permission = await Notification.requestPermission();
+        // if (permission !== "granted") {
+        //     alert("Notifications are blocked. Please allow them in settings.");
+        //     return;
+        // }
+
+        // if (isIos() && !isInStandaloneMode()) {
+        //     console.log("iOS Safari requires Add to Home Screen first");
+        //     return;
+        // }
+
+    function isIos() {
+        return /iphone|ipad|ipod/i.test(navigator.userAgent);
+    }
+
+    function isInStandaloneMode() {
+        return ("standalone" in window.navigator) && window.navigator.standalone;
+    }
+
+  document.getElementById("enableBtn").addEventListener("click", () => {
+        // Show button only for iOS PWA users
+        if (isIos() && isInStandaloneMode()) {
+            document.getElementById("enableBtn").style.display = "block";
+        } else {
+            // Auto setup on other platforms
+            setupPush().catch(err => console.error(err));
+        }
+    });
+
+    async function setupPush() {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+            alert("Please enable notifications to continue.");
+            return;
+        }
+
+        const register = await navigator.serviceWorker.register("/sw.js");
+        console.log("Service Worker Registered!");
+
+        const subscription = await register.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        });
+
+        console.log("✅ Push subscribed:", subscription);
+    }
+
+    // Handle button click on iOS
+    document.getElementById("enableBtn").addEventListener("click", () => {
+        setupPush().catch(err => console.error(err));
+    });
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const rawData = atob(base64);
+        return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+    }
+
+        // async function setup() {
+
+        //     // Ask user for permission
+        //     const permission = await Notification.requestPermission();
+        //     if (permission !== "granted") {
+        //         alert("Please enable notifications to continue.");
+        //         return;
+        //     }
+        //     alert('1')
+        //     const res = await fetch("/vapidPublicKey");
+        //     const data = await res.json();
+        //     publicVapidKey = data.key;
+
+        //     console.log("Registering Service Worker...");
+        //     const register = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        //     console.log("Service Worker Registered!");
+        //     alert('2')
+        //     // ✅ Wait until service worker is ready
+        //     const serviceWorkerReady = await navigator.serviceWorker.ready;
+
+        //     console.log("Subscribing to Push...");
+        //     alert('3')
+        //     subscription = await serviceWorkerReady.pushManager.subscribe({
+        //         userVisibleOnly: true,
+        //         applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        //     });
+        //     alert('4')
+        //     const subJSON = subscription.toJSON();
+        //     NotiyData = subJSON;
+        //     console.log(NotiyData.endpoint);
+        //     alert('4')
+
+        // }
+        
+        // Handle "Send Notification" button click
+
+
+        // function urlBase64ToUint8Array(base64String) {
+        //     const padding = "=".repeat((4 - base64String.length % 4) % 4);
+        //     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        //     const rawData = atob(base64);
+        //     return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+        // }
+
+
+
+
+    </script> -->
 
     <style>
         body {
