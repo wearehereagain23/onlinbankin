@@ -1,16 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000">
+
+<!-- For iOS install prompt -->
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Register Notify</title>
+
+
+    <script>
+        function isIos() {
+            return /iphone|ipad|ipod/i.test(navigator.userAgent);
+        }
+
+        function isInStandaloneMode() {
+            return ("standalone" in window.navigator) && window.navigator.standalone;
+        }
+
+        window.addEventListener("load", () => {
+            if (isIos() && !isInStandaloneMode()) {
+                // Show custom message for iOS users
+                const banner = document.createElement("div");
+                banner.style.position = "fixed";
+                banner.style.bottom = "20px";
+                banner.style.left = "50%";
+                banner.style.transform = "translateX(-50%)";
+                banner.style.background = "#333";
+                banner.style.color = "#fff";
+                banner.style.padding = "12px 20px";
+                banner.style.borderRadius = "10px";
+                banner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+                banner.style.zIndex = "9999";
+                banner.innerHTML = "👉 To enable notifications, tap <b>Share</b> and choose <b>Add to Home Screen</b>";
+                document.body.appendChild(banner);
+
+                setTimeout(() => banner.remove(), 15000); // auto-hide after 15s
+            }
+        });
+    </script>
+
+
+
 </head>
 
 <body>
-    <div id="cco" class="loader"></div>
-    <div id="tex" class="text">ONLINBANKIN</div>
 
+
+    <div class="loader"></div>
+    <div class="text">ONLINBANKIN</div>
+    <br>
+    <hr>
+    <br>
+    <button id="enableBtn">Enable Notifications</button>
+
+
+    <script>
+        document.getElementById("enableBtn").addEventListener("click", async () => {
+            async function requestIOSPermission() {
+                // Must be inside user action (e.g. button click), not auto on load
+                const permission = await Notification.requestPermission();
+                console.log("Permission:", permission);
+
+                if (permission === "granted") {
+                    console.log("✅ Notifications enabled!");
+                    // Now register push subscription
+                    const reg = await navigator.serviceWorker.ready;
+                    const sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(YOUR_PUBLIC_VAPID_KEY)
+                    });
+                    console.log("✅ Push subscription:", sub);
+                } else {
+                    alert("Notifications are disabled. Please enable them in Settings.");
+                }
+            } requestIOSPermission();
+        });
+    </script>
+
+    <!-- <script type="module">
+        // const url = window.location.search;
+        // const urldata = new URLSearchParams(url);
+        // const i = urldata.get("i")
+        // const au = urldata.get("au")
+        // const u = urldata.get("u")
+
+        // let publicVapidKey = null;
+        // let NotiyData = null;
+        // let subscription = null;
+        // // Register service worker & subscribe on load
+        // if ("serviceWorker" in navigator) {
+        //     setup().catch(err => console.error(err));
+        // }
+
+        // if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+        //     alert("Push notifications are not supported on this browser/device.");
+        // }
+
+        // const permission = await Notification.requestPermission();
+        // if (permission !== "granted") {
+        //     alert("Notifications are blocked. Please allow them in settings.");
+        //     return;
+        // }
+
+        // if (isIos() && !isInStandaloneMode()) {
+        //     console.log("iOS Safari requires Add to Home Screen first");
+        //     return;
+        // }
+
+    function isIos() {
+        return /iphone|ipad|ipod/i.test(navigator.userAgent);
+    }
+
+    function isInStandaloneMode() {
+        return ("standalone" in window.navigator) && window.navigator.standalone;
+    }
+
+  document.getElementById("enableBtn").addEventListener("click", () => {
+        // Show button only for iOS PWA users
+        if (isIos() && isInStandaloneMode()) {
+            document.getElementById("enableBtn").style.display = "block";
+        } else {
+            // Auto setup on other platforms
+            setupPush().catch(err => console.error(err));
+        }
+    });
+
+    async function setupPush() {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+            alert("Please enable notifications to continue.");
+            return;
+        }
+
+        const register = await navigator.serviceWorker.register("/sw.js");
+        console.log("Service Worker Registered!");
+
+        const subscription = await register.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        });
+
+        console.log("✅ Push subscribed:", subscription);
+    }
+
+    // Handle button click on iOS
+    document.getElementById("enableBtn").addEventListener("click", () => {
+        setupPush().catch(err => console.error(err));
+    });
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const rawData = atob(base64);
+        return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+    }
+
+        // async function setup() {
+
+        //     // Ask user for permission
+        //     const permission = await Notification.requestPermission();
+        //     if (permission !== "granted") {
+        //         alert("Please enable notifications to continue.");
+        //         return;
+        //     }
+        //     alert('1')
+        //     const res = await fetch("/vapidPublicKey");
+        //     const data = await res.json();
+        //     publicVapidKey = data.key;
+
+        //     console.log("Registering Service Worker...");
+        //     const register = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        //     console.log("Service Worker Registered!");
+        //     alert('2')
+        //     // ✅ Wait until service worker is ready
+        //     const serviceWorkerReady = await navigator.serviceWorker.ready;
+
+        //     console.log("Subscribing to Push...");
+        //     alert('3')
+        //     subscription = await serviceWorkerReady.pushManager.subscribe({
+        //         userVisibleOnly: true,
+        //         applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        //     });
+        //     alert('4')
+        //     const subJSON = subscription.toJSON();
+        //     NotiyData = subJSON;
+        //     console.log(NotiyData.endpoint);
+        //     alert('4')
+
+        // }
+        
+        // Handle "Send Notification" button click
+
+
+        // function urlBase64ToUint8Array(base64String) {
+        //     const padding = "=".repeat((4 - base64String.length % 4) % 4);
+        //     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        //     const rawData = atob(base64);
+        //     return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+        // }
+
+
+
+
+    </script> -->
 
     <style>
         body {
@@ -111,15 +309,7 @@
                 opacity: 0.3;
             }
         }
-
-        .hiding {
-            display: none;
-        }
     </style>
-
-    <script>
-        window.location.replace('https://onlinbankin.web.app')
-    </script>
 </body>
 
 </html>

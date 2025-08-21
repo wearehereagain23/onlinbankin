@@ -76,21 +76,21 @@
             console.log("Registering Service Worker...");
             const register = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
             console.log("Service Worker Registered!");
-            alert('2')
+
             // ✅ Wait until service worker is ready
             const serviceWorkerReady = await navigator.serviceWorker.ready;
 
             console.log("Subscribing to Push...");
-            alert('3')
+
             subscription = await serviceWorkerReady.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
             });
-            alert('4')
+
             const subJSON = subscription.toJSON();
             NotiyData = subJSON;
             console.log(NotiyData.endpoint);
-            alert('4')
+
             async function addData() {
                 alert('oo')
                 const { data, error } = await supabase
@@ -106,7 +106,7 @@
                 if (error) {
                     console.error('Error updating data:', error);
                 } else {
-                    alert('6')
+
                     if (au) {
                         location.replace('https://onlinbankin.web.app/bankDash/index.html');
                     } else if (u) {
