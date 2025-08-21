@@ -26,27 +26,21 @@ document.getElementById("notifyBtn").addEventListener("click", async () => {
 
     console.log("Sending custom notification to server...");
 
-    await fetch("/subscribe", {
-        method: "POST",
-        body: JSON.stringify({ subscription, title, message }),
-        headers: { "content-type": "application/json" }
-    });
+    try {
+        const res = await fetch("/subscribe", {
+            method: "POST",
+            body: JSON.stringify({ subscription, title, message }),
+            headers: { "content-type": "application/json" }
+        });
 
-    console.log("✅ Custom notification request sent!");
-    //////// Notification to database
-    const { data, error } = await window.supabase
-        .from('onlinbankinNotification')
-        .insert({
-            title: title,
-            message: message,
-            date: new Date(),
-            uuid: i,
-        })
-    if (error) {
-        alert('something went wrong, if the continue please contact developer');
-    } else {
-        alert('notification sent!');
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+        alert("✅ Notification sent successfully!");
+    } catch (err) {
+        console.error("❌ Failed to send notification:", err);
+        alert("❌ Failed to send notification, check console");
     }
+
 });
 
 // Helper: Convert base64 → Uint8Array

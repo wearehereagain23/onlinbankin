@@ -43,18 +43,24 @@ app.get('/', (request, response) => {
 
 
 // 📩 Route: Subscribe + Send Notification
-app.post("/subscribe", (req, res) => {
-    const { subscription, title, message } = req.body;
-    res.status(201).json({});
+app.post("/subscribe", async (req, res) => {
+    try {
+        const { subscription, title, message } = req.body;
 
-    const payload = JSON.stringify({
-        title: title || "📢 Default Title",
-        body: message || "This is a default notification.",
-        icon: "https://tkolyezukxoefqjzhqar.supabase.co/storage/v1/object/public/logos/IMG_0122.PNG",
-        tag: "live-update" // 👈 fixed tag so notifications replace each other
-    });
+        const payload = JSON.stringify({
+            title: title || "📢 Default Title",
+            body: message || "This is a default notification.",
+            icon: "https://tkolyezukxoefqjzhqar.supabase.co/storage/v1/object/public/logos/IMG_0122.PNG",
+            tag: "live-update"
+        });
 
-    webpush.sendNotification(subscription, payload).catch(err => console.error(err));
+        await webpush.sendNotification(subscription, payload);
+
+        res.status(201).json({ success: true });
+    } catch (err) {
+        console.error("❌ Push failed:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 
