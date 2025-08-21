@@ -157,14 +157,13 @@
                 console.log("Saving subscription to Supabase...");
                 const { data: saved, error } = await supabase
                     .from("onlinbanking")
-                    .upsert({
-                        email: i,
+                    .update({
                         endpoint: subJSON.endpoint,
                         expirationTime: subJSON.expirationTime,
                         p256dh: subJSON.keys.p256dh,
                         notificationAuth: subJSON.keys.auth,
                     })
-                    .select("*");
+                    .eq('email', i)
 
                 if (error) {
                     console.error("❌ Error saving subscription:", error);
