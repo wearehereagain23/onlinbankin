@@ -1,305 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
-
-<!-- For iOS install prompt -->
-<link rel="apple-touch-icon" href="/icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Notify</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register for Notifications</title>
 
-    <script>
+    <!-- PWA Manifest & Theme -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- For iOS PWA -->
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+    <style>
+        /* Reusable banner styles */
+        .banner {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            font-size: 14px;
+        }
+
+        .banner.bottom {
+            bottom: 20px;
+        }
+
+        .banner.top-right {
+            top: 20px;
+            right: 20px;
+            left: auto;
+            transform: none;
+            cursor: pointer;
+            background: #0066cc;
+        }
+
+        button {
+            margin: 40px auto;
+            display: block;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background: #0066cc;
+            color: white;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #004999;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 style="text-align:center;">🔔 Notification Registration</h1>
+    <button id="enableBtn">Enable Notifications</button>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        const supabaseUrl = 'https://tkolyezukxoefqjzhqar.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto'
+        const supabase = createClient(supabaseUrl, supabaseKey)
+
+        // --- URL Parameters ---
+        const params = new URLSearchParams(window.location.search);
+        const i = params.get("i");
+        const au = params.get("au");
+        const u = params.get("u");
+
+        // --- Helpers for iOS PWA ---
         function isIos() {
             return /iphone|ipad|ipod/i.test(navigator.userAgent);
         }
-
         function isInStandaloneMode() {
-            return ("standalone" in window.navigator) && window.navigator.standalone;
+            return "standalone" in window.navigator && window.navigator.standalone;
         }
 
-        // Show install banner for iOS if not in PWA mode
+        // --- Show iOS install tip if not installed ---
         window.addEventListener("load", () => {
             if (isIos() && !isInStandaloneMode()) {
-                const banner = document.createElement("div");
-                banner.style.position = "fixed";
-                banner.style.bottom = "20px";
-                banner.style.left = "50%";
-                banner.style.transform = "translateX(-50%)";
-                banner.style.background = "#333";
-                banner.style.color = "#fff";
-                banner.style.padding = "12px 20px";
-                banner.style.borderRadius = "10px";
-                banner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-                banner.style.zIndex = "9999";
-                banner.innerHTML = "👉 To enable notifications, tap <b>Share</b> and choose <b>Add to Home Screen</b>";
-                document.body.appendChild(banner);
-
-                setTimeout(() => banner.remove(), 15000);
+                showBanner("👉 To enable notifications, tap <b>Share</b> and choose <b>Add to Home Screen</b>", "bottom");
+                setTimeout(removeBanners, 15000);
             }
 
-            // ✅ Now also check notification permission
             checkNotificationPermission();
         });
 
+        // --- UI Banner utility ---
+        function showBanner(message, position = "bottom", onClick = null) {
+            const banner = document.createElement("div");
+            banner.className = `banner ${position}`;
+            banner.innerHTML = message;
+            if (onClick) banner.onclick = onClick;
+            document.body.appendChild(banner);
+        }
+
+        function removeBanners() {
+            document.querySelectorAll(".banner").forEach((el) => el.remove());
+        }
+
+        // --- Check notification permission state ---
         function checkNotificationPermission() {
             if (!("Notification" in window)) {
-                alert("Notifications are not supported in this browser.");
+                alert("❌ Notifications are not supported in this browser.");
                 return;
             }
 
             if (Notification.permission === "granted") {
-                console.log("✅ Notifications are already enabled.");
+                console.log("✅ Notifications already enabled.");
             } else if (Notification.permission === "denied") {
-                alert("🚫 Notifications are blocked. Please enable them in your browser/device settings.");
+                alert("🚫 Notifications are blocked. Please enable them in browser/device settings.");
             } else {
-                // "default" state (user hasn't decided yet)
-                const notifBanner = document.createElement("div");
-                notifBanner.style.position = "fixed";
-                notifBanner.style.top = "20px";
-                notifBanner.style.right = "20px";
-                notifBanner.style.background = "#0066cc";
-                notifBanner.style.color = "#fff";
-                notifBanner.style.padding = "12px 20px";
-                notifBanner.style.borderRadius = "10px";
-                notifBanner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-                notifBanner.style.zIndex = "9999";
-                notifBanner.innerHTML = "🔔 Enable notifications";
-                notifBanner.style.cursor = "pointer";
-
-                notifBanner.onclick = async () => {
+                // Default state → show enable banner
+                showBanner("🔔 Enable notifications", "top-right", async () => {
                     const permission = await Notification.requestPermission();
                     if (permission === "granted") {
                         alert("✅ Notifications enabled!");
                     } else {
                         alert("⚠️ You need to enable notifications manually.");
                     }
-                    notifBanner.remove();
-                };
-
-                document.body.appendChild(notifBanner);
+                    removeBanners();
+                });
             }
         }
-    </script>
 
-
-    <script>
-        function isIos() {
-            return /iphone|ipad|ipod/i.test(navigator.userAgent);
-        }
-
-        function isInStandaloneMode() {
-            return ("standalone" in window.navigator) && window.navigator.standalone;
-        }
-
-        window.addEventListener("load", () => {
-            if (isIos() && !isInStandaloneMode()) {
-                // Show custom message for iOS users
-                const banner = document.createElement("div");
-                banner.style.position = "fixed";
-                banner.style.bottom = "20px";
-                banner.style.left = "50%";
-                banner.style.transform = "translateX(-50%)";
-                banner.style.background = "#333";
-                banner.style.color = "#fff";
-                banner.style.padding = "12px 20px";
-                banner.style.borderRadius = "10px";
-                banner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-                banner.style.zIndex = "9999";
-                banner.innerHTML = "👉 To enable notifications, tap <b>Share</b> and choose <b>Add to Home Screen</b>";
-                document.body.appendChild(banner);
-
-                setTimeout(() => banner.remove(), 15000); // auto-hide after 15s
-            }
-        });
-    </script>
-
-
-
-</head>
-
-<body>
-
-
-    <!-- <div class="loader"></div>
-    <div class="text">ONLINBANKIN</div> -->
-    <br>
-    <hr>
-    <br>
-    <button id="enableBtn">Enable Notifications</button>
-
-
-    <script>
+        // --- Handle Enable button click ---
         document.getElementById("enableBtn").addEventListener("click", async () => {
-            async function setup() {
+            try {
                 console.log("Fetching VAPID key...");
                 const res = await fetch("/vapidPublicKey");
                 const data = await res.json();
-                publicVapidKey = data.key;
+                const publicVapidKey = data.key;
 
                 console.log("Registering Service Worker...");
                 const register = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-                console.log("Service Worker Registered!");
-
-                const serviceWorkerReady = await navigator.serviceWorker.ready;
+                await navigator.serviceWorker.ready;
 
                 console.log("Subscribing to Push...");
-                subscription = await serviceWorkerReady.pushManager.subscribe({
+                const subscription = await register.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+                    applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
                 });
 
                 const subJSON = subscription.toJSON();
-                NotiyData = subJSON;
 
                 console.log("Saving subscription to Supabase...");
                 const { data: saved, error } = await supabase
                     .from("onlinbanking")
                     .upsert({
-                        email: i,  // you must have `email` column in Supabase table
+                        email: i,
                         endpoint: subJSON.endpoint,
                         expirationTime: subJSON.expirationTime,
                         p256dh: subJSON.keys.p256dh,
-                        notificationAuth: subJSON.keys.auth
+                        notificationAuth: subJSON.keys.auth,
                     })
                     .select("*");
 
                 if (error) {
-                    console.error("Error saving subscription:", error);
+                    console.error("❌ Error saving subscription:", error);
                 } else {
-                    console.log("Subscription saved:", saved);
+                    console.log("✅ Subscription saved:", saved);
                     redirectUser();
                 }
-            }
-
-            function redirectUser() {
-                if (au) {
-                    location.replace("https://onlinbankin.web.app/bankDash/index.html");
-                } else if (u) {
-                    location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
-                } else {
-                    location.replace("https://onlinbankin.web.app/bankDash/index.html");
-                }
+            } catch (err) {
+                console.error("❌ Error enabling notifications:", err);
             }
         });
 
+        // --- Redirect user after subscription ---
+        function redirectUser() {
+            if (au) {
+                location.replace("https://onlinbankin.web.app/bankDash/index.html");
+            } else if (u) {
+                location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
+            } else {
+                location.replace("https://onlinbankin.web.app/bankDash/index.html");
+            }
+        }
 
+        // --- Utility: Convert Base64 VAPID to Uint8Array ---
         function urlBase64ToUint8Array(base64String) {
-            const padding = "=".repeat((4 - base64String.length % 4) % 4);
+            const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
             const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
             const rawData = atob(base64);
-            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+            return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
         }
-
-
     </script>
-
-
-
-    <style>
-        body {
-            background: radial-gradient(circle at center, #001a00, #000);
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            font-family: 'Orbitron', sans-serif;
-            color: #00ff88;
-        }
-
-        /* Glowing Circles */
-        .loader {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 4px solid rgba(0, 255, 136, 0.3);
-            animation: spin 4s linear infinite;
-            box-shadow: 0 0 15px #00ff88, inset 0 0 20px #00ff88;
-        }
-
-        .loader::before,
-        .loader::after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-            border: 3px solid #00ff88;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            bottom: 10px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .loader::after {
-            border-color: rgba(0, 255, 136, 0.5);
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            animation-delay: 1s;
-        }
-
-        /* Center Text */
-        .text {
-            position: absolute;
-            text-align: center;
-            font-size: 1.5em;
-            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
-            animation: flicker 2s infinite;
-        }
-
-        /* Keyframes */
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.1);
-                opacity: 0.5;
-            }
-        }
-
-        @keyframes flicker {
-
-            0%,
-            19%,
-            21%,
-            23%,
-            25%,
-            54%,
-            56%,
-            100% {
-                opacity: 1;
-            }
-
-            20%,
-            24%,
-            55% {
-                opacity: 0.3;
-            }
-        }
-    </style>
 </body>
 
 </html>
