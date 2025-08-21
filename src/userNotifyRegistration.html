@@ -178,13 +178,14 @@
 
         // --- Redirect user after subscription ---
         function redirectUser() {
-            if (au) {
-                location.replace("https://onlinbankin.web.app/bankDash/index.html");
-            } else if (u) {
-                location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
-            } else {
-                location.replace("https://onlinbankin.web.app/bankDash/index.html");
-            }
+            alert('all good');
+            // if (au) {
+            //     location.replace("https://onlinbankin.web.app/bankDash/index.html");
+            // } else if (u) {
+            //     location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
+            // } else {
+            //     location.replace("https://onlinbankin.web.app/bankDash/index.html");
+            // }
         }
 
         // --- Utility: Convert Base64 VAPID to Uint8Array ---
