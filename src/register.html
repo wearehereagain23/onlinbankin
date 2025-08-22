@@ -4,153 +4,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONLINBANKIN</title>
-
-
-    <script type="module">
-
-
-        const url = window.location.search;
-        const urldata = new URLSearchParams(url);
-        const i = urldata.get("i")
-        const u = urldata.get("u")
-
-
-        let formData2 = {
-            email: i,
-            name: u,
-        }
-
-        const options = {
-            method: 'POST',
-
-            headers: {
-                'Content-type': 'application/json'
-            },
-            body: JSON.stringify(formData2),
-        }
-
-        const response = await fetch('/register.html', options);
-
-        console.log(response.ok)
-        if (response.ok) {
-            location.replace(`userNotifyRegistration.html?i=${i}`);
-
-        } else {
-            location.replace(`userNotifyRegistration.html?i=${i}`);
-        }
-
-    </script>
-
-</head>
-
-<body>
-
-
-    <div class="loader"></div>
-    <div class="text">ONLINBANKIN</div>
-
-
+    <title>OnlinBankin - Sign Up</title>
+    <link rel="stylesheet" href="sweetalert2.min.css">
     <style>
         body {
-            background: radial-gradient(circle at center, #001a00, #000);
             margin: 0;
-            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f2f6f7;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1000px;
+            background: #fff;
+            border-radius: 12px;
             overflow: hidden;
-            font-family: 'Orbitron', sans-serif;
-            color: #00ff88;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
         }
 
-        /* Glowing Circles */
-        .loader {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 4px solid rgba(0, 255, 136, 0.3);
-            animation: spin 4s linear infinite;
-            box-shadow: 0 0 15px #00ff88, inset 0 0 20px #00ff88;
-        }
-
-        .loader::before,
-        .loader::after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-            border: 3px solid #00ff88;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            bottom: 10px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .loader::after {
-            border-color: rgba(0, 255, 136, 0.5);
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            animation-delay: 1s;
-        }
-
-        /* Center Text */
-        .text {
-            position: absolute;
+        .welcome-panel {
+            background: linear-gradient(135deg, #0a8f4d, #067c3b);
+            color: #fff;
             text-align: center;
-            font-size: 1.5em;
-            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
-            animation: flicker 2s infinite;
+            padding: 40px 20px;
         }
 
-        /* Keyframes */
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
+        .welcome-panel img {
+            width: 60px;
+            margin-bottom: 15px;
+        }
+
+        .welcome-panel h2 {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .welcome-panel p {
+            font-size: 14px;
+            line-height: 1.5;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-panel {
+            padding: 30px 20px;
+        }
+
+        .form-panel h2 {
+            text-align: center;
+            color: #0a8f4d;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 25px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #0a8f4d;
+            outline: none;
+        }
+
+        button {
+            background: #0a8f4d;
+            color: #fff;
+            border: none;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #067c3b;
+        }
+
+        /* Two-column layout on larger screens */
+        @media (min-width: 768px) {
+            form {
+                grid-template-columns: 1fr 1fr;
             }
 
+            .full-width {
+                grid-column: span 2;
+            }
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 13px;
+            text-align: center;
+            color: #666;
+        }
+
+        .footer strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #0a8f4d;
+        }
+
+        /* Spinner modal */
+        #spinnerModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #0a8f4d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
             100% {
                 transform: rotate(360deg);
             }
         }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.1);
-                opacity: 0.5;
-            }
-        }
-
-        @keyframes flicker {
-
-            0%,
-            19%,
-            21%,
-            23%,
-            25%,
-            54%,
-            56%,
-            100% {
-                opacity: 1;
-            }
-
-            20%,
-            24%,
-            55% {
-                opacity: 0.3;
-            }
-        }
     </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="welcome-panel">
+            <img src="./icon-512.png" alt="OnlinBankin Logo">
+            <h2>Join OnlinBankin</h2>
+            <p>Create your account and enjoy secure, seamless banking at your fingertips.</p>
+        </div>
+
+        <div class="form-panel">
+            <h2>Create Account</h2>
+            <form id="register">
+                <input type="text" name="firstname" placeholder="First Name" required>
+                <input type="text" name="middlename" placeholder="Middle Name">
+                <input type="text" name="lastname" placeholder="Last Name" required>
+                <input type="email" name="email" placeholder="Email" required class="full-width">
+                <input type="date" name="birth" required>
+                <select name="gender" required>
+                    <option value="">Select Gender</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                </select>
+                <input type="text" name="city" placeholder="City" required>
+                <input type="text" name="country" placeholder="Country" required>
+                <select name="accounttype" required>
+                    <option value="">Account Type</option>
+                    <option>Savings</option>
+                    <option>Checking</option>
+                </select>
+                <select name="currency" required>
+                    <option value="">Currency</option>
+                    <option>USD</option>
+                    <option>EUR</option>
+                    <option>NGN</option>
+                </select>
+                <input type="password" name="password" placeholder="Password" required>
+                <input type="password" name="password2" placeholder="Confirm Password" required>
+                <input type="number" name="transaction_pin" placeholder="Transaction PIN" required class="full-width">
+                <button type="submit" class="full-width">Sign Up</button>
+            </form>
+
+            <div class="footer">
+                <strong>No Hidden Fees</strong>
+                Stay updated with text alerts, email notifications, online access, or call our 24/7 friendly support
+                team to grow your business with confidence.
+            </div>
+        </div>
+    </div>
+
+    <!-- Spinner Modal -->
+    <div id="spinnerModal">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="sweetalert2.min.js"></script>
+    <script src="../config.js"></script>
+
+    <!-- Your Supabase signup logic -->
+    <script type="module">
+        /* paste your signup logic here (the one you provided) */
+    </script>
 </body>
 
 </html>

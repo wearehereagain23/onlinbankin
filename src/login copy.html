@@ -4,61 +4,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome</title>
+    <title>ONLINBANKIN</title>
+
+    <!-- POPUP SCRIPT -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="sweetalert2.min.css">
+
+
 </head>
+
 
 <body>
 
-    <script>
-        // --- Supabase init ---
-        const supabase = window.supabase.createClient(
-            "https://tkolyezukxoefqjzhqar.supabase.co",   // 🔹 replace with your project URL
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto"                       // 🔹 replace with your anon key
-        );
 
-        // --- Request permission on load ---
-        async function checkNotificationPermission() {
-            if (!("Notification" in window)) {
-                await Swal.fire("❌ Notifications not supported", "Redirecting...", "error");
-                return;
+    <script type="module">
+
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        const supabaseUrl = 'https://tkolyezukxoefqjzhqar.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto'
+        const supabase = createClient(supabaseUrl, supabaseKey)
+        let OTP = Math.floor(1000 + Math.random() * 908700);
+
+        const url = window.location.search;
+        const urldata = new URLSearchParams(url);
+        const i = urldata.get("i")
+        const u = urldata.get("u")
+
+
+
+        const { data, error } = await supabase
+            .from('onlinbanking')
+            .update({ otp: OTP })
+            .eq('email', i)
+            .select('*')
+        if (error) {
+            hideSpinnerModal()
+            console.error('Error updating data:', error);
+        } else {
+            let formData2 = {
+                email: i,
+                otp: OTP,
+                name: u,
             }
 
-            if (Notification.permission !== "granted") {
-                // Keep Swal open until user allows
+            const options = {
+                method: 'POST',
+
+                headers: {
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify(formData2),
+            }
+
+            const response = await fetch('/login.html', options);
+
+            console.log(response.ok)
+            if (response.ok) {
+                document.getElementById('cco').classList.add('hiding')
+                document.getElementById('tex').classList.add('hiding')
                 Swal.fire({
-                    title: "⚠️ Enable Notifications",
-                    html: `
-            <p>You must allow notifications to continue.</p>
-            <button id="allowBtn" class="swal2-confirm swal2-styled">Allow Notifications</button>
-          `,
+                    background: '#0C290F',
+                    confirmButtonColor: 'green',
+                    customClass: {
+                        popup: 'swal2Style'
+                    },
+                    title: `OTP was sent to ${i}`,
+                    icon: 'success',
+                    showConfirmButton: true,
                     allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    didOpen: () => {
-                        document.getElementById("allowBtn").addEventListener("click", async () => {
-                            const permission = await Notification.requestPermission();
-                            if (permission === "granted") {
-                                Swal.close();
-                                Swal.fire("✅ Notifications enabled!", "", "success");
-                            }
-                        });
-                    }
+                }).then(() => {
+                    location.replace(`userNotifyRegistration.html?i=${i}&u=${u}`);
+                });
+            } else {
+                document.getElementById('cco').classList.add('hiding')
+                document.getElementById('tex').classList.add('hiding')
+                Swal.fire({
+                    background: '#0C290F',
+                    confirmButtonColor: 'green',
+                    customClass: {
+                        popup: 'swal2Style'
+                    },
+                    title: "Somthing went wrong",
+                    icon: 'error',
+                    showConfirmButton: true,
+                    allowOutsideClick: false,
+                }).then(() => {
+                    window.history.back();
                 });
             }
         }
-        checkNotificationPermission();
 
-        // --- Convert VAPID Key ---
-        function urlBase64ToUint8Array(base64String) {
-            const padding = "=".repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-            const rawData = atob(base64);
-            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
-        }
+
+
+
+
+
 
     </script>
-
 
     <div id="cco" class="loader"></div>
     <div id="tex" class="text">ONLINBANKIN</div>
