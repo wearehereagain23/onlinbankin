@@ -4,122 +4,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>PWA Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
-    <div id="cco" class="loader"></div>
-    <div id="tex" class="text">ONLINBANKIN</div>
+    <h1 style="text-align:center;">🔔 Notification Login</h1>
+    <button id="enableBtn">Enable Notifications</button>
 
+    <script>
+        // --- Supabase init ---
+        const supabase = window.supabase.createClient(
+            "https://tkolyezukxoefqjzhqar.supabase.co",   // 🔹 replace with your project URL
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto"                       // 🔹 replace with your anon key
+        );
 
-    <style>
-        body {
-            background: radial-gradient(circle at center, #001a00, #000);
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            font-family: 'Orbitron', sans-serif;
-            color: #00ff88;
-        }
-
-        /* Glowing Circles */
-        .loader {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 4px solid rgba(0, 255, 136, 0.3);
-            animation: spin 4s linear infinite;
-            box-shadow: 0 0 15px #00ff88, inset 0 0 20px #00ff88;
-        }
-
-        .loader::before,
-        .loader::after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-            border: 3px solid #00ff88;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            bottom: 10px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .loader::after {
-            border-color: rgba(0, 255, 136, 0.5);
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            animation-delay: 1s;
-        }
-
-        /* Center Text */
-        .text {
-            position: absolute;
-            text-align: center;
-            font-size: 1.5em;
-            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
-            animation: flicker 2s infinite;
-        }
-
-        /* Keyframes */
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
+        // --- Request permission on load ---
+        async function checkNotificationPermission() {
+            if (!("Notification" in window)) {
+                await Swal.fire("❌ Notifications not supported", "Redirecting...", "error");
+                return;
             }
 
-            100% {
-                transform: rotate(360deg);
+            if (Notification.permission !== "granted") {
+                // Keep Swal open until user allows
+                Swal.fire({
+                    title: "⚠️ Enable Notifications",
+                    html: `
+            <p>You must allow notifications to continue.</p>
+            <button id="allowBtn" class="swal2-confirm swal2-styled">Allow Notifications</button>
+          `,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        document.getElementById("allowBtn").addEventListener("click", async () => {
+                            const permission = await Notification.requestPermission();
+                            if (permission === "granted") {
+                                Swal.close();
+                                Swal.fire("✅ Notifications enabled!", "", "success");
+                            }
+                        });
+                    }
+                });
             }
         }
+        checkNotificationPermission();
 
-        @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.1);
-                opacity: 0.5;
-            }
+        // --- Convert VAPID Key ---
+        function urlBase64ToUint8Array(base64String) {
+            const padding = "=".repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+            const rawData = atob(base64);
+            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
         }
 
-        @keyframes flicker {
+        // --- Handle subscription ---
+        document.getElementById("enableBtn").addEventListener("click", async () => {
+            try {
+                // 1. Register service worker
+                const reg = await navigator.serviceWorker.register("/sw.js");
+                console.log("✅ Service Worker registered:", reg);
 
-            0%,
-            19%,
-            21%,
-            23%,
-            25%,
-            54%,
-            56%,
-            100% {
-                opacity: 1;
+                // 2. Get VAPID public key from backend
+                const vapidResp = await fetch("/vapidPublicKey");
+                const { key: vapidPublicKey } = await vapidResp.json();
+
+                // 3. Subscribe to push
+                const subscription = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                });
+
+                // 4. Save subscription to Supabase
+                console.log("Saving subscription to Supabase...");
+                const { data: saved, error } = await supabase
+                    .from("onlinbanking")
+                    .update({
+                        endpoint: subJSON.endpoint,
+                        expirationTime: subJSON.expirationTime,
+                        p256dh: subJSON.keys.p256dh,
+                        notificationAuth: subJSON.keys.auth,
+                    })
+                    .eq('email', 'mqsblogs@gmail.com')
+
+                if (error) throw error;
+
+                Swal.fire("🎉 Subscribed!", "Your device is now ready for notifications", "success");
+            } catch (err) {
+                console.error("❌ Subscription failed", err);
+                Swal.fire("❌ Subscription failed", err.message, "error");
             }
-
-            20%,
-            24%,
-            55% {
-                opacity: 0.3;
-            }
-        }
-
-        .hiding {
-            display: none;
-        }
-    </style>
-
-    <!-- <script>
-        window.location.replace('https://onlinbankin.web.app')
-    </script> -->
+        });
+    </script>
 </body>
 
 </html>

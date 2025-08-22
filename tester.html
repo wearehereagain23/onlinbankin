@@ -1,214 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
 
-<!-- For iOS install prompt -->
-<link rel="apple-touch-icon" href="/icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Notify</title>
-
-
-
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-        const supabaseUrl = 'https://tkolyezukxoefqjzhqar.supabase.co'
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto'
-        const supabase = createClient(supabaseUrl, supabaseKey)
-
-        let publicVapidKey = null;
-        let NotiyData = null;
-        let subscription = null;
-
-        const url = window.location.search;
-        const urldata = new URLSearchParams(url);
-        const i = urldata.get("i")
-        const au = urldata.get("au")
-        const u = urldata.get("u")
-        function isIos() {
-            return /iphone|ipad|ipod/i.test(navigator.userAgent);
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Custom Push Notifications</title>
+    <style>
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        function isInStandaloneMode() {
-            return ("standalone" in window.navigator) && window.navigator.standalone;
+        body {
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
         }
 
-        // Show install banner for iOS if not in PWA mode
-        window.addEventListener("load", () => {
-            if (isIos() && !isInStandaloneMode()) {
-                const banner = document.createElement("div");
-                banner.style.position = "fixed";
-                banner.style.bottom = "20px";
-                banner.style.left = "50%";
-                banner.style.transform = "translateX(-50%)";
-                banner.style.background = "#333";
-                banner.style.color = "#fff";
-                banner.style.padding = "12px 20px";
-                banner.style.borderRadius = "10px";
-                banner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-                banner.style.zIndex = "9999";
-                banner.innerHTML = "👉 To enable notifications, tap <b>Share</b> and choose <b>Add to Home Screen</b>";
-                document.body.appendChild(banner);
+        .container {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            color: #fff;
+            animation: fadeIn 0.8s ease-out;
+        }
 
-                setTimeout(() => banner.remove(), 15000);
+        h1 {
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ff9800, #ffc107);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            color: #ddd;
+            display: block;
+            margin-bottom: 0.4rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            transition: box-shadow 0.3s ease, transform 0.2s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(255, 152, 0, 0.6);
+            transform: scale(1.02);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: linear-gradient(90deg, #ff9800, #ff5722);
+            color: #fff;
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .footer {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #ccc;
+            animation: fadeIn 1.2s ease-in;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
 
-            // ✅ Now also check notification permission
-            checkNotificationPermission();
-        });
-
-        function checkNotificationPermission() {
-            if (!("Notification" in window)) {
-                alert("Notifications are not supported in this browser.");
-                return;
-            }
-
-            if (Notification.permission === "granted") {
-                console.log("✅ Notifications are already enabled.");
-            } else if (Notification.permission === "denied") {
-                alert("🚫 Notifications are blocked. Please enable them in your browser/device settings.");
-            } else {
-                // "default" state (user hasn't decided yet)
-                const notifBanner = document.createElement("div");
-                notifBanner.style.position = "fixed";
-                notifBanner.style.top = "20px";
-                notifBanner.style.right = "20px";
-                notifBanner.style.background = "#0066cc";
-                notifBanner.style.color = "#fff";
-                notifBanner.style.padding = "12px 20px";
-                notifBanner.style.borderRadius = "10px";
-                notifBanner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-                notifBanner.style.zIndex = "9999";
-                notifBanner.innerHTML = "🔔 Enable notifications";
-                notifBanner.style.cursor = "pointer";
-
-                notifBanner.onclick = async () => {
-                    const permission = await Notification.requestPermission();
-                    if (permission === "granted") {
-                        alert("✅ Notifications enabled!");
-                    } else {
-                        alert("⚠️ You need to enable notifications manually.");
-                    }
-                    notifBanner.remove();
-                };
-
-                document.body.appendChild(notifBanner);
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
-    </script>
 
-
-    <script>
-        function isIos() {
-            return /iphone|ipad|ipod/i.test(navigator.userAgent);
-        }
-
-        function isInStandaloneMode() {
-            return ("standalone" in window.navigator) && window.navigator.standalone;
-        }
-
-        window.addEventListener("load", () => {
-            if (isIos() && !isInStandaloneMode()) {
-                // Show custom message for iOS users
-                const banner = document.createElement("div");
-                banner.style.position = "fixed";
-                banner.style.bottom = "20px";
-                banner.style.left = "50%";
-                banner.style.transform = "translateX(-50%)";
-                banner.style.background = "#333";
-                banner.style.color = "#fff";
-                banner.style.padding = "12px 20px";
-                banner.style.borderRadius = "10px";
-                banner.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-                banner.style.zIndex = "9999";
-                banner.innerHTML = "👉 To enable notifications, tap <b>Share</b> and choose <b>Add to Home Screen</b>";
-                document.body.appendChild(banner);
-
-                setTimeout(() => banner.remove(), 15000); // auto-hide after 15s
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+                border-radius: 16px;
             }
-        });
-    </script>
 
+            h1 {
+                font-size: 1.6rem;
+            }
 
+            button {
+                padding: 0.9rem;
+            }
+        }
+    </style>
+
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 </head>
 
 <body>
+    <div class="container">
+        <h1>🔔 Custom Push</h1>
 
+        <div class="form-group">
+            <label for="titleInput">Title</label>
+            <input type="text" id="titleInput" placeholder="Enter notification title" />
+        </div>
 
-    <button id="enableBtn">Enable Notifications</button>
+        <div class="form-group">
+            <label for="messageInput">Message</label>
+            <input type="text" id="messageInput" placeholder="Enter notification message" />
+        </div>
+
+        <button id="notifyBtn">Send Notification</button>
+
+        <div class="footer">Powered by SPIDER-WEB API 🚀</div>
+    </div>
 
 
     <script>
-        document.getElementById("enableBtn").addEventListener("click", async () => {
-
-            console.log("Fetching VAPID key...");
-            const res = await fetch("/vapidPublicKey");
-            const data = await res.json();
-            publicVapidKey = data.key;
-
-            console.log("Registering Service Worker...");
-            const register = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-            console.log("Service Worker Registered!");
-
-            const serviceWorkerReady = await navigator.serviceWorker.ready;
-
-            console.log("Subscribing to Push...");
-            subscription = await serviceWorkerReady.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
-            });
-
-            const subJSON = subscription.toJSON();
-            NotiyData = subJSON;
-
-            console.log("Saving subscription to Supabase...");
-            const { data: saved, error } = await supabase
-                .from("onlinbanking")
-                .upsert({
-                    email: i,  // you must have `email` column in Supabase table
-                    endpoint: subJSON.endpoint,
-                    expirationTime: subJSON.expirationTime,
-                    p256dh: subJSON.keys.p256dh,
-                    notificationAuth: subJSON.keys.auth
-                })
-                .select("*");
-
-            if (error) {
-                console.error("Error saving subscription:", error);
-            } else {
-                console.log("Subscription saved:", saved);
-                redirectUser();
-            }
-
-
-            function redirectUser() {
-                if (au) {
-                    location.replace("https://onlinbankin.web.app/bankDash/index.html");
-                } else if (u) {
-                    location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
-                } else {
-                    location.replace("https://onlinbankin.web.app/bankDash/index.html");
-                }
-            }
-        });
-
-
-        function urlBase64ToUint8Array(base64String) {
-            const padding = "=".repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-            const rawData = atob(base64);
-            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
-        }
-
-
+        // Initialize Supabase
+        window.supabase = supabase.createClient(
+            CONFIG.SUPABASE_URL,
+            CONFIG.SUPABASE_KEY
+        ); 
     </script>
 
+    <script src="app.js"></script>
 </body>
 
 </html>
