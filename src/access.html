@@ -2,10 +2,20 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PWA Setup</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- PWA Manifest & Theme -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- For iOS PWA -->
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,10 +24,22 @@
             padding: 40px;
         }
     </style>
+    <style>
+        .swal2Style {
+            color: white;
+        }
+
+        .swal2-confirm {
+            background-color: green;
+        }
+
+        .swal2-confirm:hover {
+            background-color: #001a00;
+        }
+    </style>
 </head>
 
 <body>
-    <h2>🔍 Device Check</h2>
 
     <script>
         // --- Device Detection ---
@@ -37,7 +59,8 @@
             // 1. Service Worker support check
             if (!("serviceWorker" in navigator)) {
                 // unsupported device -> go login with "none"
-                window.location.href = "login.html?status=none";
+                // window.location.href = "login.html?status=none";
+                alert("we 1")
                 return;
             }
 
@@ -45,7 +68,8 @@
             if (!isMobile()) {
                 // Check current permission
                 if (Notification.permission === "granted") {
-                    window.location.href = "login.html";
+                    // window.location.href = "login.html";
+                    alert("we 1")
                     return;
                 }
 
@@ -76,73 +100,65 @@
                         showConfirmButton: false,
                         allowOutsideClick: false,
                         allowEscapeKey: false,
+                        background: '#0C290F',
+                        customClass: {
+                            popup: 'swal2Style'
+                        },
                     });
                     return;
                 }
 
-                // If default → request and allow retry
-                let permission = await Notification.requestPermission();
-                if (permission === "granted") {
-                    window.location.href = "login.html";
-                } else {
+                // 🔥 New: If notifications are still in "default" state (not granted or denied yet)
+                if (Notification.permission === "default") {
                     await Swal.fire({
-                        title: "⚠️ Notifications Blocked",
+                        title: "🔔 Notifications Required",
                         html: `
-                          Notifications are required.<br><br>
-                          <button id="retryBtn" class="swal2-confirm swal2-styled">Retry Allow</button>
-                          <br><br>
-                          <small>If you blocked notifications, please enable them in your browser settings.</small>
-                        `,
-                        icon: "warning",
+                  This app requires notifications to be enabled.<br><br>
+                  <button id="enableBtn" class="swal2-confirm swal2-styled">Enable Now</button>
+                  <br><br>
+                  <small>You will be asked for permission.</small>
+                `,
+                        icon: "info",
                         allowOutsideClick: false,
                         allowEscapeKey: false,
-                        allowEnterKey: false,
                         showConfirmButton: false,
+                        background: '#0C290F',
+                        customClass: {
+                            popup: 'swal2Style'
+                        },
                         didOpen: () => {
-                            document.getElementById("retryBtn").addEventListener("click", async () => {
+                            document.getElementById("enableBtn").addEventListener("click", async () => {
                                 let permission = await Notification.requestPermission();
                                 if (permission === "granted") {
                                     Swal.close();
                                     window.location.href = "login.html";
                                 } else if (permission === "denied") {
-                                    let browser = "your browser";
-                                    if (/chrome|crios|crmo/i.test(navigator.userAgent)) {
-                                        browser = "Google Chrome";
-                                    } else if (/firefox|fxios/i.test(navigator.userAgent)) {
-                                        browser = "Mozilla Firefox";
-                                    } else if (/safari/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent)) {
-                                        browser = "Safari";
-                                    } else if (/edg/i.test(navigator.userAgent)) {
-                                        browser = "Microsoft Edge";
-                                    }
-
                                     Swal.update({
-                                        title: "❌ Notifications Permanently Blocked",
+                                        title: "❌ Notifications Blocked",
                                         html: `
-                                          You have blocked notifications.<br><br>
-                                          To re-enable, go to <b>Site Settings</b> in ${browser} and allow notifications.<br><br>
-                                          <ul style="text-align:left; display:inline-block;">
-                                            <li><b>Chrome/Edge:</b> Click the padlock 🔒 in the address bar → Site settings → Notifications → Allow.</li>
-                                            <li><b>Firefox:</b> Click the shield 🛡️ → Permissions → Allow notifications.</li>
-                                            <li><b>Safari (iOS/macOS):</b> Open Settings → Safari → Notifications → Allow for this site.</li>
-                                          </ul>
-                                        `,
+                          You have blocked notifications.<br><br>
+                          To re-enable, go to <b>Site Settings</b> in browser and allow notifications.<br><br>
+                          <ul style="text-align:left; display:inline-block;">
+                            <li><b>Chrome/Edge:</b> Click the padlock 🔒 in the address bar → Site settings → Notifications → Allow.</li>
+                            <li><b>Firefox:</b> Click the shield 🛡️ → Permissions → Allow notifications.</li>
+                            <li><b>Safari (iOS/macOS):</b> Open Settings → Safari → Notifications → Allow for this site.</li>
+                          </ul>
+                        `,
                                         icon: "error",
-                                        showConfirmButton: true,
-                                        confirmButtonText: "OK"
+                                        showConfirmButton: false
                                     });
                                 }
                             });
                         }
                     });
+                    return; // stop further checks until user decides
                 }
-                return;
             }
 
             // 3. Already installed as PWA (Android or iOS)
             if (isInStandaloneMode()) {
                 await Swal.fire({
-                    title: "✅ PWA Installed",
+                    title: "✅ OnlinBankin Installed",
                     html: "You already have this app installed.<br>Please use it from your home screen.",
                     icon: "info",
                     allowOutsideClick: false,
@@ -156,7 +172,7 @@
             // 4. iOS but not installed
             if (isIos()) {
                 await Swal.fire({
-                    title: "📲 Install PWA",
+                    title: "📲 Install OnlinBankin",
                     html: `
             To continue, please:<br><br>
             👉 Tap <b>Share</b> and choose <b>Add to Home Screen</b>.<br><br>
@@ -174,7 +190,7 @@
                 window.addEventListener("beforeinstallprompt", (event) => {
                     event.preventDefault(); // stop auto prompt
                     Swal.fire({
-                        title: "📲 Install PWA",
+                        title: "📲 Install OnlinBankin",
                         html: `
               👉 On Android, tap <b>Install App</b> from browser menu.<br><br>
               <b>This popup will not close until you install.</b>
@@ -191,6 +207,116 @@
 
         window.addEventListener("load", init);
     </script>
+
+    <div id="cco" class="loader"></div>
+    <div id="tex" class="text">ONLINBANKIN</div>
+
+
+    <style>
+        body {
+            background: radial-gradient(circle at center, #001a00, #000);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            color: #00ff88;
+        }
+
+        /* Glowing Circles */
+        .loader {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid rgba(0, 255, 136, 0.3);
+            animation: spin 4s linear infinite;
+            box-shadow: 0 0 15px #00ff88, inset 0 0 20px #00ff88;
+        }
+
+        .loader::before,
+        .loader::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid #00ff88;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .loader::after {
+            border-color: rgba(0, 255, 136, 0.5);
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            animation-delay: 1s;
+        }
+
+        /* Center Text */
+        .text {
+            position: absolute;
+            text-align: center;
+            font-size: 1.5em;
+            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+            animation: flicker 2s infinite;
+        }
+
+        /* Keyframes */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes flicker {
+
+            0%,
+            19%,
+            21%,
+            23%,
+            25%,
+            54%,
+            56%,
+            100% {
+                opacity: 1;
+            }
+
+            20%,
+            24%,
+            55% {
+                opacity: 0.3;
+            }
+        }
+
+        .hiding {
+            display: none;
+        }
+    </style>
+
 </body>
 
 </html>
