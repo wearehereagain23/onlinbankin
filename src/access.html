@@ -51,8 +51,16 @@
             return /iphone|ipad|ipod/i.test(navigator.userAgent);
         }
 
+        // function isInStandaloneMode() {
+        //     return ("standalone" in window.navigator && window.navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
+        // }
+
         function isInStandaloneMode() {
-            return ("standalone" in window.navigator && window.navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
+            return (
+                (window.matchMedia('(display-mode: standalone)').matches) || // most browsers
+                (window.navigator.standalone === true) || // iOS Safari
+                document.referrer.startsWith("android-app://") // fallback for Android
+            );
         }
 
         async function init() {
