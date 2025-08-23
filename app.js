@@ -41,6 +41,13 @@ app.get('/', (request, response) => {
 });
 
 
+app.get('/sw.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/sw.js'));
+});
+
+app.get('/manifest.json', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src/manifest.json'));
+});
 
 // 📩 Route: Subscribe + Send Notification
 app.post("/subscribe", async (req, res) => {

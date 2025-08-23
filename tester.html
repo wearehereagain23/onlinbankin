@@ -1,173 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Custom Push Notifications</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Signup</title>
     <style>
-        /* Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            min-height: 100vh;
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+            background: #f2f6f7;
             display: flex;
-            align-items: center;
             justify-content: center;
-            padding: 1rem;
+            align-items: center;
+            min-height: 100vh;
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(12px);
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            display: grid;
+            grid-template-columns: 1fr;
             width: 100%;
-            max-width: 420px;
-            text-align: center;
+            max-width: 1000px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .15);
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .welcome-panel {
+            background: linear-gradient(135deg, #0a8f4d, #067c3b);
             color: #fff;
-            animation: fadeIn 0.8s ease-out;
+            text-align: center;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
-        h1 {
-            margin-bottom: 1.5rem;
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(90deg, #ff9800, #ffc107);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .welcome-panel img {
+            width: 70px;
+            margin-bottom: 15px;
         }
 
-        .form-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
+        .welcome-panel h2 {
+            font-size: 24px;
+            margin: 10px 0;
         }
 
-        .form-group label {
-            font-size: 0.9rem;
-            color: #ddd;
-            display: block;
-            margin-bottom: 0.4rem;
+        .welcome-panel p {
+            font-size: 14px;
+            line-height: 1.5;
+            max-width: 400px;
+            margin: 0 auto;
         }
 
-        .form-group input {
+        .form-panel {
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-panel h2 {
+            text-align: center;
+            color: #0a8f4d;
+            margin-bottom: 30px;
+            font-size: 22px;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        @media (min-width:1024px) {
+            form {
+                grid-template-columns: 1fr 1fr;
+                gap: 20px 24px;
+            }
+
+            .full-width {
+                grid-column: span 2;
+            }
+        }
+
+        input,
+        select,
+        button {
             width: 100%;
-            padding: 0.9rem;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            background: rgba(255, 255, 255, 0.95);
-            color: #333;
-            transition: box-shadow 0.3s ease, transform 0.2s ease;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #d4d7dc;
+            font-size: 14px;
+            box-sizing: border-box;
         }
 
-        .form-group input:focus {
+        input:focus,
+        select:focus {
+            border-color: #0a8f4d;
             outline: none;
-            box-shadow: 0 0 10px rgba(255, 152, 0, 0.6);
-            transform: scale(1.02);
+            box-shadow: 0 0 0 2px rgba(10, 143, 77, .15);
         }
 
         button {
-            width: 100%;
-            padding: 1rem;
-            font-size: 1rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            background: linear-gradient(90deg, #ff9800, #ff5722);
+            background: #0a8f4d;
             color: #fff;
-            transition: transform 0.2s ease, box-shadow 0.3s ease;
+            border: none;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background .2s;
         }
 
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+            background: #067c3b;
         }
 
-        button:active {
-            transform: translateY(0);
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .error {
+            color: #b91c1c;
+            font-size: 12px;
+            min-height: 14px;
+        }
+
+        .hint {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        /* Password strength */
+        .strength-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .strength-bar {
+            flex: 1;
+            height: 8px;
+            border-radius: 8px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+
+        .strength-bar>div {
+            height: 100%;
+            width: 0%;
+            transition: width .25s, background .25s;
+        }
+
+        .strength-label {
+            font-size: 12px;
+            color: #334155;
+            width: 70px;
+        }
+
+        .muted {
+            color: #475569;
+            font-size: 13px;
+            grid-column: span 2;
+            text-align: center;
+        }
+
+        .link {
+            color: #0a8f4d;
+            text-decoration: none;
+        }
+
+        .link:hover {
+            text-decoration: underline;
         }
 
         .footer {
-            margin-top: 1.5rem;
-            font-size: 0.85rem;
-            color: #ccc;
-            animation: fadeIn 1.2s ease-in;
+            margin-top: 20px;
+            font-size: 13px;
+            text-align: center;
+            color: #666;
+            grid-column: span 2;
         }
 
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .footer strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #0a8f4d;
         }
 
-        /* Responsive */
-        @media (max-width: 480px) {
-            .container {
-                padding: 1.5rem;
-                border-radius: 16px;
-            }
+        /* Spinner modal */
+        #spinnerModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, .8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
 
-            h1 {
-                font-size: 1.6rem;
-            }
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #0a8f4d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
 
-            button {
-                padding: 0.9rem;
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
             }
         }
     </style>
-
-    <script src="config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
 </head>
 
 <body>
     <div class="container">
-        <h1>🔔 Custom Push</h1>
-
-        <div class="form-group">
-            <label for="titleInput">Title</label>
-            <input type="text" id="titleInput" placeholder="Enter notification title" />
+        <div class="welcome-panel">
+            <img src="https://img.icons8.com/?size=100&id=108811&format=png&color=ffffff" alt="Logo">
+            <h2>Welcome to SecureBank</h2>
+            <p>Create your account in a few easy steps.
+                Your data is encrypted and secured with the highest standards.</p>
         </div>
 
-        <div class="form-group">
-            <label for="messageInput">Message</label>
-            <input type="text" id="messageInput" placeholder="Enter notification message" />
+        <div class="form-panel">
+            <h2>Create Account</h2>
+            <form id="signupForm" novalidate>
+                <div class="field">
+                    <input type="text" id="firstName" placeholder="First Name" required>
+                    <div class="error" id="firstNameError"></div>
+                </div>
+                <div class="field">
+                    <input type="text" id="lastName" placeholder="Last Name" required>
+                    <div class="error" id="lastNameError"></div>
+                </div>
+
+                <div class="field full-width">
+                    <input type="email" id="email" placeholder="Email" required>
+                    <div class="error" id="emailError"></div>
+                </div>
+
+                <div class="field">
+                    <input type="password" id="password" placeholder="Password" required>
+                    <div class="strength-wrap">
+                        <div class="strength-bar">
+                            <div id="strengthBar"></div>
+                        </div>
+                        <span class="strength-label" id="strengthLabel">Weak</span>
+                    </div>
+                    <div class="error" id="passwordError"></div>
+                </div>
+
+                <div class="field">
+                    <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                    <div class="error" id="confirmPasswordError"></div>
+                </div>
+
+                <div class="field full-width">
+                    <input type="text" id="pin" placeholder="4-6 Digit PIN" maxlength="6" required>
+                    <div class="error" id="pinError"></div>
+                </div>
+
+                <button type="submit" class="full-width">Sign Up</button>
+
+                <div class="muted full-width">
+                    Already have an account? <a href="#" class="link">Sign In</a>
+                </div>
+
+                <div class="footer full-width">
+                    <strong>SecureBank © 2025</strong>
+                    Banking made safe and easy.
+                </div>
+            </form>
         </div>
-
-        <button id="notifyBtn">Send Notification</button>
-
-        <div class="footer">Powered by SPIDER-WEB API 🚀</div>
     </div>
 
+    <!-- Spinner Modal -->
+    <div id="spinnerModal">
+        <div class="spinner"></div>
+    </div>
 
     <script>
-        // Initialize Supabase
-        window.supabase = supabase.createClient(
-            CONFIG.SUPABASE_URL,
-            CONFIG.SUPABASE_KEY
-        ); 
-    </script>
+        const form = document.getElementById("signupForm");
+        const spinnerModal = document.getElementById("spinnerModal");
 
-    <script src="app.js"></script>
+        // Fields
+        const firstName = document.getElementById("firstName");
+        const lastName = document.getElementById("lastName");
+        const email = document.getElementById("email");
+        const password = document.getElementById("password");
+        const confirmPassword = document.getElementById("confirmPassword");
+        const pin = document.getElementById("pin");
+
+        // Errors
+        const firstNameError = document.getElementById("firstNameError");
+        const lastNameError = document.getElementById("lastNameError");
+        const emailError = document.getElementById("emailError");
+        const passwordError = document.getElementById("passwordError");
+        const confirmPasswordError = document.getElementById("confirmPasswordError");
+        const pinError = document.getElementById("pinError");
+
+        // Strength meter
+        const strengthBar = document.getElementById("strengthBar");
+        const strengthLabel = document.getElementById("strengthLabel");
+
+        function validateEmail(value) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        }
+
+        function evaluatePasswordStrength(value) {
+            let score = 0;
+            if (value.length >= 8) score++;
+            if (/[A-Z]/.test(value)) score++;
+            if (/[0-9]/.test(value)) score++;
+            if (/[^A-Za-z0-9]/.test(value)) score++;
+
+            let width = ["25%", "50%", "75%", "100%"][score - 1] || "25%";
+            let color = ["#dc2626", "#f59e0b", "#3b82f6", "#16a34a"][score - 1] || "#dc2626";
+            let label = ["Weak", "Fair", "Good", "Strong"][score - 1] || "Weak";
+
+            strengthBar.style.width = width;
+            strengthBar.style.background = color;
+            strengthLabel.textContent = label;
+        }
+
+        password.addEventListener("input", () => {
+            evaluatePasswordStrength(password.value);
+        });
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            let valid = true;
+
+            // First name
+            if (!firstName.value.trim()) {
+                firstNameError.textContent = "First name is required.";
+                valid = false;
+            } else {
+                firstNameError.textContent = "";
+            }
+
+            // Last name
+            if (!lastName.value.trim()) {
+                lastNameError.textContent = "Last name is required.";
+                valid = false;
+            } else {
+                lastNameError.textContent = "";
+            }
+
+            // Email
+            if (!validateEmail(email.value)) {
+                emailError.textContent = "Enter a valid email address.";
+                valid = false;
+            } else {
+                emailError.textContent = "";
+            }
+
+            // Password
+            if (password.value.length < 8) {
+                passwordError.textContent = "Password must be at least 8 characters.";
+                valid = false;
+            } else {
+                passwordError.textContent = "";
+            }
+
+            // Confirm Password
+            if (confirmPassword.value !== password.value) {
+                confirmPasswordError.textContent = "Passwords do not match.";
+                valid = false;
+            } else {
+                confirmPasswordError.textContent = "";
+            }
+
+            // PIN
+            if (!/^\d{4,6}$/.test(pin.value)) {
+                pinError.textContent = "PIN must be 4 to 6 digits.";
+                valid = false;
+            } else {
+                pinError.textContent = "";
+            }
+
+            if (valid) {
+                spinnerModal.style.display = "flex";
+                setTimeout(() => {
+                    spinnerModal.style.display = "none";
+                    alert("Signup successful! 🎉");
+                    form.reset();
+                    strengthBar.style.width = "0%";
+                    strengthLabel.textContent = "Weak";
+                }, 2000);
+            }
+        });
+    </script>
 </body>
 
 </html>

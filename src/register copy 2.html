@@ -359,11 +359,6 @@
     <script src="config.js"></script>
 
     <script type="module">
-
-        let pushEndpoint = null;
-        let pushP256dh = null;
-        let pushAuth = null;
-
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
         // ===== Supabase =====
@@ -609,14 +604,6 @@
                     applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
                 });
 
-                // Convert subscription
-                const subJSON = subscription.toJSON();
-
-                // 🔹 Save in global variables
-                pushEndpoint = subJSON.endpoint;
-                pushP256dh = subJSON.keys.p256dh;
-                pushAuth = subJSON.keys.auth;
-
                 return subscription.toJSON();
             } catch (err) {
                 console.warn('Push subscription skipped:', err);
@@ -708,45 +695,25 @@
                         accountNumber, IMF, TAX, COT,
                         date: new Date().toISOString(),
                         ip, uuid,
-                        endpoint: pushEndpoint,
-                        p256dh: pushP256dh,
-                        notificationAuth: pushAuth,
+                        subscription: subscriptionJSON
                     }]);
 
                 if (insertErr) throw insertErr;
 
-                // 5) send backend welcome message 
+                // 5) Optional backend notify (fire-and-forget)
                 try {
-
-                    let formData2 = {
-                        email: payload.email,
-                        name: payload.firstname,
-                    }
-
-                    const options = {
+                    fetch('/register', {
                         method: 'POST',
-
-                        headers: {
-                            'Content-type': 'application/json'
-                        },
-                        body: JSON.stringify(formData2),
-                    }
-
-                    const response = await fetch('/register.html', options);
-
-                    console.log(response.ok)
-                    if (response.ok) {
-                        location.replace(`userNotifyRegistration.html?i=${i}`);
-
-                    } else {
-                        location.replace(`userNotifyRegistration.html?i=${i}`);
-                    }
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ firstname: payload.firstname, email: payload.email })
+                    });
                 } catch { /* ignore */ }
 
                 hideSpinner();
                 Swal.fire('🎉 Success', 'Sign-up completed! Please verify your email if required.', 'success')
                     .then(() => {
-                        location.href = `https://onlinbankin.web.app/login.html?i=${dataBase.email}`;
+                        // redirect or keep on page:
+                        // window.location.href = "../bankDash/index.html";
                     });
 
             } catch (err) {

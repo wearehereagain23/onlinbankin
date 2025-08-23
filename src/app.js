@@ -5,6 +5,7 @@ const p = urldata.get("p")
 const e = urldata.get("e")
 const i = urldata.get("i")
 
+
 let subscription = {
     "endpoint": e,
     "expirationTime": null,

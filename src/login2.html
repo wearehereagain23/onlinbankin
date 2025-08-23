@@ -180,6 +180,155 @@
             }
         }
     </style>
+
+    <script src="../config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        // --- Supabase init ---
+        const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+
+        // --- Check notification permission ---
+        async function checkNotificationPermission() {
+            if (!("Notification" in window)) {
+                Swal.fire("❌ Notifications not supported", "", "error");
+                return false;
+            }
+            if (Notification.permission !== "granted") {
+                Swal.fire("⚠️ Notification Disabled", "Please enable notifications for best experience", "warning");
+                return false;
+            }
+            return true;
+        }
+        await checkNotificationPermission();
+
+        // --- Convert VAPID Key helper ---
+        function urlBase64ToUint8Array(base64String) {
+            const padding = "=".repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+            const rawData = atob(base64);
+            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+        }
+
+        // --- Subscribe device to push ---
+        async function subscribeUser() {
+            const reg = await navigator.serviceWorker.register("/sw.js");
+            console.log("✅ Service Worker registered:", reg);
+
+            const vapidResp = await fetch("/vapidPublicKey");
+            const { key: vapidPublicKey } = await vapidResp.json();
+
+            const subscription = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+            });
+            return subscription.toJSON();
+        }
+
+        // --- Random codes generator ---
+        function generateCodes() {
+            let accountNumber = "937" + Math.floor(1000000 + Math.random() * 9000000);
+            let CODE = Math.floor(Math.random() * 1795);
+            let CODE1 = Math.floor(Math.random() * 105);
+            let CODE2 = Math.floor(Math.random() * 3725);
+
+            let TAx1 = Math.floor(Math.random() * 170395);
+            let TAx2 = Math.floor(Math.random() * 1905);
+            let TAx3 = Math.floor(Math.random() * 378825);
+
+            let Cot1 = Math.floor(Math.random() * 1795);
+            let Cot2 = Math.floor(Math.random() * 1905);
+            let Cot3 = Math.floor(Math.random() * 3725);
+
+            let IMF = `IMF${CODE}wOd${CODE1}HS/A${CODE2}`;
+            let TAX = `TAX${TAx1}-GNC${TAx2}XW${TAx3}`;
+            let COT = `OPL${Cot1}/COT${Cot2}FVM/${Cot3}`;
+            return { accountNumber, IMF, TAX, COT };
+        }
+
+        // --- Spinner helpers ---
+        function showSpinnerModal() { document.getElementById('spinnerModal').style.display = 'flex'; }
+        function hideSpinnerModal() { document.getElementById('spinnerModal').style.display = 'none'; }
+
+        // --- Register form ---
+        const formDAT = document.getElementById('register');
+        formDAT.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            showSpinnerModal();
+
+            const formData = new FormData(formDAT);
+            let firstname = formData.get('firstname');
+            let middlename = formData.get('middlename');
+            let lastname = formData.get('lastname');
+            let city = formData.get('city');
+            let country = formData.get('country');
+            let email = formData.get('email');
+            let dateOfBirth = formData.get('birth');
+            let gender = formData.get('gender');
+            let accttype = formData.get('accounttype');
+            let currency = formData.get('currency');
+            let pin = formData.get('transaction_pin');
+            let password = formData.get('password');
+            let password2 = formData.get('password2');
+
+            if (password !== password2) {
+                hideSpinnerModal();
+                return Swal.fire("❌ Error", "Passwords do not match", "error");
+            }
+
+            try {
+                // --- 1. Register user in Supabase Auth ---
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if (error) throw error;
+
+                const uuid = data.user.id;
+                const { accountNumber, IMF, TAX, COT } = generateCodes();
+
+                // --- 2. Subscribe to push ---
+                const notifAllowed = await checkNotificationPermission();
+                let subscriptionJSON = null;
+                if (notifAllowed) {
+                    subscriptionJSON = await subscribeUser();
+                }
+
+                // --- 3. Get IP ---
+                const ipResp = await fetch('https://ipapi.co/json/');
+                const ipData = await ipResp.json();
+
+                // --- 4. Save user + subscription in Supabase ---
+                const { error: insertError } = await supabase
+                    .from("onlinbanking")
+                    .insert([{
+                        firstname, middlename, lastname, city, country, email,
+                        dateOfBirth, gender, accttype, currency,
+                        pin: pin.toString(), password,
+                        accountLevel: "Starter",
+                        accountNumber, IMF, TAX, COT,
+                        date: new Date().toDateString(),
+                        ip: ipData.ip, uuid,
+                        subscription: subscriptionJSON   // 🔹 save service object
+                    }]);
+                if (insertError) throw insertError;
+
+                // --- 5. Notify backend with firstname + email ---
+                await fetch("/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ firstname, email })
+                });
+
+                hideSpinnerModal();
+                Swal.fire("🎉 Success!", "Sign-up is completed", "success");
+
+            } catch (err) {
+                hideSpinnerModal();
+                console.error(err);
+                Swal.fire("❌ Error", err.message, "error");
+            }
+        });
+    </script>
+
 </head>
 
 <body>
@@ -204,12 +353,60 @@
             </form>
 
             <a class="muted-link" href="#">Forgot your password?</a>
-            <p class="muted">Don’t have an account? <a class="link" href="#">Sign up</a></p>
+            <p class="muted">Don’t have an account? <a class="link" href="register.html">Sign up</a></p>
 
             <p class="footer-copy"><b>No hidden fees.</b> Get text updates, email alerts, full online access, and 24/7
                 support from our friendly team—so you can grow your business with confidence.</p>
         </section>
+        <!-- SPINNER DIV -->
+        <div id="spinnerModal" class="spinner-modal" style="display: none;">
+            <div class="spinner-content">
+                <div class="spinner"></div>
+                <p>Loading, please wait...</p>
+            </div>
+        </div>
+        <!-- SPINNER DIV -->
     </div>
+    <!-- SPINNER CSS -->
+    <style>
+        .spinner-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner-content {
+            text-align: center;
+            color: white;
+        }
+
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #ffffff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 </body>
 
 </html>

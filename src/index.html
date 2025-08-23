@@ -27,36 +27,56 @@
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto"                       // 🔹 replace with your anon key
         );
 
-        // --- Request permission on load ---
-        async function checkNotificationPermission() {
-            if (!("Notification" in window)) {
-                await Swal.fire("❌ Notifications not supported", "Redirecting...", "error");
-                return;
-            }
+        setTimeout(() => {
+            // --- Request permission on load ---
+            async function checkNotificationPermission() {
+                if (!("Notification" in window)) {
+                    await Swal.fire("❌ Notifications not supported", "Redirecting...", "error");
+                    return;
+                }
 
-            if (Notification.permission !== "granted") {
-                // Keep Swal open until user allows
-                Swal.fire({
-                    title: "⚠️ Enable Notifications",
-                    html: `
+                if (Notification.permission !== "granted") {
+                    // Keep Swal open until user allows
+                    Swal.fire({
+                        background: '#0C290F',
+                        customClass: {
+                            popup: 'swal2Style'
+                        },
+                        confirmButtonColor: 'green',
+                        showConfirmButton: false,
+                        title: "Enable Notification 🔔",
+                        html: `
             <p>You must allow notifications to continue.</p>
-            <button id="allowBtn" class="swal2-confirm swal2-styled">Allow Notifications</button>
+            <button id="allowBtn" style="background-color: green;" class="swal2-confirm swal2-styled">Allow Notifications</button>
           `,
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    didOpen: () => {
-                        document.getElementById("allowBtn").addEventListener("click", async () => {
-                            const permission = await Notification.requestPermission();
-                            if (permission === "granted") {
-                                Swal.close();
-                                Swal.fire("✅ Notifications enabled!", "", "success");
-                            }
-                        });
-                    }
-                });
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            document.getElementById("allowBtn").addEventListener("click", async () => {
+                                const permission = await Notification.requestPermission();
+                                if (permission === "granted") {
+                                    Swal.close();
+                                    Swal.fire({
+                                        background: '#0C290F',
+                                        showConfirmButton: true,
+                                        confirmButtonColor: 'green',
+                                        icon: 'success',
+                                        customClass: {
+                                            popup: 'swal2Style'
+                                        },
+                                        title: "✅ Notifications enabled!",
+                                    }).then(() => {
+                                        window.location.href = "login2.html"
+                                    })
+                                }
+                            });
+                        }
+                    });
+                }
             }
-        }
-        checkNotificationPermission();
+            checkNotificationPermission();
+        }, 3000);
+
 
         // --- Convert VAPID Key ---
         function urlBase64ToUint8Array(base64String) {
@@ -177,6 +197,7 @@
             display: none;
         }
     </style>
+
     <style>
         .swal2Style {
             color: white;

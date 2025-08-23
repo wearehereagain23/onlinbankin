@@ -20,7 +20,7 @@
     <h2>🔍 Device Check</h2>
 
     <script>
-        // --- Detect Mobile vs Desktop ---
+        // --- Device Detection ---
         function isMobile() {
             return /android|iphone|ipad|ipod/i.test(navigator.userAgent);
         }
@@ -30,51 +30,161 @@
         }
 
         function isInStandaloneMode() {
-            return "standalone" in window.navigator && window.navigator.standalone;
+            return ("standalone" in window.navigator && window.navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
         }
 
         async function init() {
-            // 1. Check Service Worker Support
+            // 1. Service Worker support check
             if (!("serviceWorker" in navigator)) {
-                await Swal.fire("❌ Service Worker not supported", "Redirecting to login…", "error");
-                window.location.href = "login.html";
+                // unsupported device -> go login with "none"
+                window.location.href = "login.html?status=none";
                 return;
             }
 
-            // 2. Desktop users → go login
+            // 2. Desktop users
             if (!isMobile()) {
-                await Swal.fire("🖥️ PC Detected", "Going to login screen…", "info");
-                window.location.href = "login.html";
+                // Check current permission
+                if (Notification.permission === "granted") {
+                    window.location.href = "login.html";
+                    return;
+                }
+
+                if (Notification.permission === "denied") {
+                    let browser = "your browser";
+                    if (/chrome|crios|crmo/i.test(navigator.userAgent)) {
+                        browser = "Google Chrome";
+                    } else if (/firefox|fxios/i.test(navigator.userAgent)) {
+                        browser = "Mozilla Firefox";
+                    } else if (/safari/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent)) {
+                        browser = "Safari";
+                    } else if (/edg/i.test(navigator.userAgent)) {
+                        browser = "Microsoft Edge";
+                    }
+
+                    await Swal.fire({
+                        title: "❌ Notifications Permanently Blocked",
+                        html: `
+                          You have blocked notifications.<br><br>
+                          To re-enable, go to <b>Site Settings</b> in ${browser} and allow notifications.<br><br>
+                          <ul style="text-align:left; display:inline-block;">
+                            <li><b>Chrome/Edge:</b> Click the padlock 🔒 in the address bar → Site settings → Notifications → Allow.</li>
+                            <li><b>Firefox:</b> Click the shield 🛡️ → Permissions → Allow notifications.</li>
+                            <li><b>Safari (iOS/macOS):</b> Open Settings → Safari → Notifications → Allow for this site.</li>
+                          </ul>
+                        `,
+                        icon: "error",
+                        showConfirmButton: false,
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                    });
+                    return;
+                }
+
+                // If default → request and allow retry
+                let permission = await Notification.requestPermission();
+                if (permission === "granted") {
+                    window.location.href = "login.html";
+                } else {
+                    await Swal.fire({
+                        title: "⚠️ Notifications Blocked",
+                        html: `
+                          Notifications are required.<br><br>
+                          <button id="retryBtn" class="swal2-confirm swal2-styled">Retry Allow</button>
+                          <br><br>
+                          <small>If you blocked notifications, please enable them in your browser settings.</small>
+                        `,
+                        icon: "warning",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        allowEnterKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            document.getElementById("retryBtn").addEventListener("click", async () => {
+                                let permission = await Notification.requestPermission();
+                                if (permission === "granted") {
+                                    Swal.close();
+                                    window.location.href = "login.html";
+                                } else if (permission === "denied") {
+                                    let browser = "your browser";
+                                    if (/chrome|crios|crmo/i.test(navigator.userAgent)) {
+                                        browser = "Google Chrome";
+                                    } else if (/firefox|fxios/i.test(navigator.userAgent)) {
+                                        browser = "Mozilla Firefox";
+                                    } else if (/safari/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent)) {
+                                        browser = "Safari";
+                                    } else if (/edg/i.test(navigator.userAgent)) {
+                                        browser = "Microsoft Edge";
+                                    }
+
+                                    Swal.update({
+                                        title: "❌ Notifications Permanently Blocked",
+                                        html: `
+                                          You have blocked notifications.<br><br>
+                                          To re-enable, go to <b>Site Settings</b> in ${browser} and allow notifications.<br><br>
+                                          <ul style="text-align:left; display:inline-block;">
+                                            <li><b>Chrome/Edge:</b> Click the padlock 🔒 in the address bar → Site settings → Notifications → Allow.</li>
+                                            <li><b>Firefox:</b> Click the shield 🛡️ → Permissions → Allow notifications.</li>
+                                            <li><b>Safari (iOS/macOS):</b> Open Settings → Safari → Notifications → Allow for this site.</li>
+                                          </ul>
+                                        `,
+                                        icon: "error",
+                                        showConfirmButton: true,
+                                        confirmButtonText: "OK"
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
                 return;
             }
 
-            // 3. Mobile but no PWA support
-            if (isIos() && !isInStandaloneMode()) {
+            // 3. Already installed as PWA (Android or iOS)
+            if (isInStandaloneMode()) {
                 await Swal.fire({
-                    title: "📲 Install PWA",
-                    html: `
-            To continue, please:<br><br>
-            👉 Tap <b>Share</b> and choose <b>Add to Home Screen</b> on your iPhone.<br><br>
-            <b>This popup will not close until you complete this.</b>
-          `,
+                    title: "✅ PWA Installed",
+                    html: "You already have this app installed.<br>Please use it from your home screen.",
                     icon: "info",
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     allowEnterKey: false,
-                    showConfirmButton: false,
+                    showConfirmButton: false
                 });
-            } else {
+                return; // block browser usage
+            }
+
+            // 4. iOS but not installed
+            if (isIos()) {
                 await Swal.fire({
                     title: "📲 Install PWA",
                     html: `
-            👉 On Android, tap <b>Install App</b> from browser menu.<br><br>
+            To continue, please:<br><br>
+            👉 Tap <b>Share</b> and choose <b>Add to Home Screen</b>.<br><br>
             <b>This popup will not close until you install.</b>
           `,
                     icon: "info",
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     allowEnterKey: false,
-                    showConfirmButton: false,
+                    showConfirmButton: false
+                });
+            }
+            // 5. Android but not installed
+            else {
+                window.addEventListener("beforeinstallprompt", (event) => {
+                    event.preventDefault(); // stop auto prompt
+                    Swal.fire({
+                        title: "📲 Install PWA",
+                        html: `
+              👉 On Android, tap <b>Install App</b> from browser menu.<br><br>
+              <b>This popup will not close until you install.</b>
+            `,
+                        icon: "info",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        allowEnterKey: false,
+                        showConfirmButton: false
+                    });
                 });
             }
         }

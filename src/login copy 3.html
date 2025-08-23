@@ -185,27 +185,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script type="module">
-
-        function showSpinnerModal() {
-            document.getElementById('spinnerModal').style.display = 'flex';
-        }
-
-        function hideSpinnerModal() {
-            document.getElementById('spinnerModal').style.display = 'none';
-        }
-
-        let dataBase = null
-        let password = null
-
-        let pushEndpoint = null;
-        let pushP256dh = null;
-        let pushAuth = null;
-
-
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-        const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-
-
         // --- Check notification permission with URL param support ---
         async function checkNotificationPermission() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -293,7 +272,7 @@
         //LOGIN FUNCTIONS 
 
 
-
+        const form = document.getElementById('signupForm');
 
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -351,190 +330,102 @@
             }
         }
 
-        const form = document.getElementById('signupForm');
 
         // ===== Submit =====
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const formData = new FormData(form);
+            const formData = new FormData(formDAT);
             let email = formData.get('email').toLowerCase().trim();
             let password = formData.get('password').trim();
 
-            const { data, error } = await supabase
-                .from('onlinbanking')
-                .select('*')
-                .eq('email', email)
-            if (error) {
-                alert('error')
-            } else {
-                if (data.length > 0) {
-                    data.forEach(async (doc) => {
-                        dataBase = doc
+            try {
+                // 1) Supabase Auth sign up
+                const { data: auth, error: authErr } = await supabase.auth.signUp({
+                    email: payload.email,
+                    password: payload.password
+                });
+                if (authErr) throw authErr;
 
-                        if (doc.auth == 'active') {
+                const uuid = auth?.user?.id || (crypto?.randomUUID?.() ?? String(Date.now()));
+                const { accountNumber, IMF, TAX, COT } = genCodes();
 
-                            if (doc.password == password) {
+                // 2) Optional push subscription (non-blocking)
+                const subscriptionJSON = await subscribePushIfAllowed();
 
-                                let formData2 = {
-                                    email: dataBase.email,
-                                    otp: OTP,
-                                    name: dataBase.firstname,
-                                }
-                                const options = {
-                                    method: 'POST',
+                // 3) IP
+                const ip = await getIP();
 
-                                    headers: {
-                                        'Content-type': 'application/json'
-                                    },
-                                    body: JSON.stringify(formData2),
-                                }
-                                const response = await fetch('/login.html', options);
+                // 4) Insert profile row
+                const { error: insertErr } = await supabase
+                    .from('onlinbanking')
+                    .insert([{
+                        firstname: payload.firstname,
+                        middlename: payload.middlename,
+                        lastname: payload.lastname,
+                        city: payload.city,
+                        country: payload.country,
+                        email: payload.email,
+                        dateOfBirth: payload.dateOfBirth,
+                        gender: payload.gender,
+                        accttype: payload.accttype,
+                        currency: payload.currency,
+                        pin: payload.pin,                 // ⚠️ consider hashing server-side
+                        password: payload.password,       // ⚠️ consider hashing/never store raw
+                        accountLevel: 'Starter',
+                        accountNumber, IMF, TAX, COT,
+                        date: new Date().toISOString(),
+                        ip, uuid,
+                        endpoint: pushEndpoint,
+                        p256dh: pushP256dh,
+                        notificationAuth: pushAuth,
+                    }]);
 
-                                console.log(response.ok)
-                                if (response.ok) {
-                                    document.getElementById('cco').classList.add('hiding')
-                                    document.getElementById('tex').classList.add('hiding')
-                                    Swal.fire({
-                                        background: '#0C290F',
-                                        confirmButtonColor: 'green',
-                                        customClass: {
-                                            popup: 'swal2Style'
-                                        },
-                                        title: `OTP was sent to ${i}`,
-                                        icon: 'success',
-                                        showConfirmButton: true,
-                                        allowOutsideClick: false,
-                                    }).then(async () => {
-                                        /// SAVE SERVICE SUBSCRIPTION
-                                        const { data, error } = await supabase
-                                            .from('onlinbanking')
-                                            .update({
-                                                endpoint: pushEndpoint,
-                                                p256dh: pushP256dh,
-                                                notificationAuth: pushAuth,
-                                            })
-                                            .eq('uuid', dataBase.email);
-                                        if (error) {
-                                            hideSpinnerModal()
-                                            console.error('Error updating data:', error);
-                                        } else {
-                                            hideSpinnerModal()
-                                            Swal.fire({
-                                                title: "Done",
-                                                icon: 'success',
-                                                showConfirmButton: true,
-                                                allowOutsideClick: false,
-                                            }).then(() => {
-                                                location.href = `https://onlinbankin.web.app/login.html?i=${dataBase.email}`;
-                                            });
-                                        }
-                                    });
-                                } else {
-                                    document.getElementById('cco').classList.add('hiding')
-                                    document.getElementById('tex').classList.add('hiding')
-                                    Swal.fire({
-                                        background: '#0C290F',
-                                        confirmButtonColor: 'green',
-                                        customClass: {
-                                            popup: 'swal2Style'
-                                        },
-                                        title: "Somthing went wrong",
-                                        icon: 'error',
-                                        showConfirmButton: true,
-                                        allowOutsideClick: false,
-                                    });
-                                }
+                if (insertErr) throw insertErr;
 
+                // 5) send backend welcome message 
+                try {
+                    console.log('sending email 1');
 
+                    let formData2 = {
+                        email: payload.email,
+                        name: payload.firstname,
+                    }
 
-                            } else {
-                                Swal.fire({
-                                    background: '#0C290F',
-                                    customClass: {
-                                        popup: 'swal2Style'
-                                    },
-                                    toast: true,
-                                    title: "Incorrect password",
-                                    position: 'top-end',
-                                    icon: 'error',
-                                    showConfirmButton: false,
-                                    allowOutsideClick: false,
-                                });
-                            }
+                    const options = {
+                        method: 'POST',
 
-                        } else {
-                            const { data, error } = await supabase.auth.signInWithPassword({
-                                email: email,
-                                password: password,
-                            })
-                            if (error) {
-                                hideSpinnerModal()
-
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: `${error.message}`,
-                                    icon: 'error',
-                                    confirmButtonText: 'Ok'
-                                })
-
-                                console.log('Error signing up:', error.message);
-                            } else {
-
-                                const { data, error } = await supabase
-                                    .from('onlinbanking')
-                                    .update({
-                                        endpoint: pushEndpoint,
-                                        p256dh: pushP256dh,
-                                        notificationAuth: pushAuth,
-                                    })
-                                    .eq('uuid', dataBase.email);
-                                if (error) {
-                                    hideSpinnerModal()
-                                    console.error('Error updating data:', error);
-                                } else {
-                                    hideSpinnerModal()
-                                    Swal.fire({
-                                        title: "Done",
-                                        icon: 'success',
-                                        showConfirmButton: true,
-                                        allowOutsideClick: false,
-                                    }).then(() => {
-                                        location.href = `https://onlinbankin.web.app/login.html?i=${dataBase.email}`;
-                                    });
-                                }
-
-
-                            }
-                        }
-                        //////////////
-
-
-
-                    })
-
-                } else {
-                    hideSpinnerModal();
-                    Swal.fire({
-                        background: '#0C290F',
-                        customClass: {
-                            popup: 'swal2Style'
+                        headers: {
+                            'Content-type': 'application/json'
                         },
-                        toast: true,
-                        title: "Email not registered",
-                        position: 'top-end',
-                        icon: 'error',
-                        showConfirmButton: false,
-                        allowOutsideClick: false,
+                        body: JSON.stringify(formData2),
+                    }
+
+                    const response = await fetch('/register.html', options);
+
+                    console.log(response.ok)
+                    if (response.ok) {
+                        location.replace(`userNotifyRegistration.html?i=${i}`);
+
+                    } else {
+                        location.replace(`userNotifyRegistration.html?i=${i}`);
+                    }
+                } catch { /* ignore */ }
+
+                hideSpinner();
+                console.log('sending email 2');
+                Swal.fire('🎉 Success', 'Sign-up completed! Please verify your email if required.', 'success')
+                    .then(() => {
+                        // redirect or keep on page:
+                        // window.location.href = "../bankDash/index.html";
                     });
-                }
+
+            } catch (err) {
+                hideSpinner();
+                console.error(err);
+                Swal.fire('❌ Error', err.message || 'Something went wrong.', 'error');
             }
-
-
-
         });
-
-
 
 
     </script>
@@ -557,8 +448,8 @@
             <p class="form-sub">Login to your account to continue</p>
 
             <form id="signupForm">
-                <input type="email" name="email" id="email" placeholder="Email" required />
-                <input type="password" name="password" id="password" placeholder="Password" required />
+                <input type="email" placeholder="Email" required />
+                <input type="password" placeholder="Password" required />
                 <button type="submit" class="btn">Log In</button>
             </form>
 

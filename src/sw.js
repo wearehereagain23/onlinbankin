@@ -2,12 +2,14 @@
 
 // Install and cache some files
 self.addEventListener("install", (event) => {
+    self.skipWaiting(); // Activate immediately
     console.log("Service Worker installing…");
     event.waitUntil(
         caches.open("v1").then((cache) => {
             return cache.addAll([
                 "/",
-                "/userNotifyRegistration.html",
+                "/register.html",
+                "/login.html",
                 "/manifest.json"
             ]);
         })
@@ -15,10 +17,21 @@ self.addEventListener("install", (event) => {
     self.skipWaiting();
 });
 
-// Activate
+
+
 self.addEventListener("activate", (event) => {
+    event.waitUntil(
+        (async () => {
+            if (self.registration.navigationPreload) {
+                await self.registration.navigationPreload.enable();
+            }
+            // Clear old caches if any
+            const keys = await caches.keys();
+            await Promise.all(keys.map(key => caches.delete(key)));
+        })()
+    );
     console.log("Service Worker activated.");
-    event.waitUntil(self.clients.claim());
+    self.clients.claim(); // Take control of clients without reload
 });
 
 // Fetch (basic cache-first strategy)
