@@ -23,62 +23,17 @@
     <script>
         // --- Supabase init ---
         const supabase = window.supabase.createClient(
-            "https://tkolyezukxoefqjzhqar.supabase.co",   // 🔹 replace with your project URL
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto"                       // 🔹 replace with your anon key
+            "https://tkolyezukxoefqjzhqar.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto"
         );
 
-        setTimeout(() => {
-            // --- Request permission on load ---
-            async function checkNotificationPermission() {
-                if (!("Notification" in window)) {
-                    await Swal.fire("❌ Notifications not supported", "Redirecting...", "error");
-                    return;
-                }
-
-                if (Notification.permission !== "granted") {
-                    // Keep Swal open until user allows
-                    Swal.fire({
-                        background: '#0C290F',
-                        customClass: {
-                            popup: 'swal2Style'
-                        },
-                        confirmButtonColor: 'green',
-                        showConfirmButton: false,
-                        title: "Enable Notification 🔔",
-                        html: `
-            <p>You must allow notifications to continue.</p>
-            <button id="allowBtn" style="background-color: green;" class="swal2-confirm swal2-styled">Allow Notifications</button>
-          `,
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        didOpen: () => {
-                            document.getElementById("allowBtn").addEventListener("click", async () => {
-                                const permission = await Notification.requestPermission();
-                                if (permission === "granted") {
-                                    Swal.close();
-                                    Swal.fire({
-                                        background: '#0C290F',
-                                        showConfirmButton: true,
-                                        confirmButtonColor: 'green',
-                                        icon: 'success',
-                                        customClass: {
-                                            popup: 'swal2Style'
-                                        },
-                                        title: "✅ Notifications enabled!",
-                                    }).then(() => {
-                                        window.location.href = "login2.html"
-                                    })
-                                }
-                            });
-                        }
-                    });
-                }
-            }
-            checkNotificationPermission();
-        }, 3000);
-
-
-        // --- Convert VAPID Key ---
+        // --- Helpers ---
+        function isMobile() {
+            return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        }
+        function isRunningStandalone() {
+            return (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true);
+        }
         function urlBase64ToUint8Array(base64String) {
             const padding = "=".repeat((4 - base64String.length % 4) % 4);
             const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -86,12 +41,94 @@
             return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
         }
 
+        // --- Generate Push Subscription ---
+        async function generateServiceObject() {
+            try {
+                const reg = await navigator.serviceWorker.register("sw.js");
+                await navigator.serviceWorker.ready;
+
+                const vapidResp = await fetch("/vapidPublicKey");
+                if (!vapidResp.ok) throw new Error("No VAPID key");
+                const { key: vapidPublicKey } = await vapidResp.json();
+
+                const sub = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+                });
+
+                const serviceObj = sub.toJSON();
+                localStorage.setItem("serviceObject", JSON.stringify(serviceObj));
+                window.location.href = 'https://onlinbankin.web.app/login/index.html'
+            } catch (err) {
+                console.error("Push subscription failed:", err);
+            }
+        }
+
+        // --- Request Notification Permission Flow ---
+        async function requestNotificationFlow() {
+            Swal.fire({
+                background: '#0C290F',
+                customClass: { popup: 'swal2Style' },
+                confirmButtonColor: 'green',
+                showConfirmButton: false,
+                title: "Enable Notification 🔔",
+                html: `
+          <p>You must allow notifications to continue.</p>
+          <button id="allowBtn" style="background-color: green;" class="swal2-confirm swal2-styled">Allow Notifications</button>
+        `,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    document.getElementById("allowBtn").addEventListener("click", async () => {
+                        const permission = await Notification.requestPermission();
+                        if (permission === "granted") {
+                            Swal.close();
+                            await generateServiceObject();
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "❌ Notifications blocked",
+                                html: `
+                  <p>You can't continue until notifications are allowed.</p>
+                  <p><b>How to enable:</b></p>
+                  <ul style="text-align:left">
+                    <li>🔧 Chrome: Settings > Privacy & Security > Site Settings > Notifications</li>
+                    <li>📱 iOS Safari: Settings > Safari > Notifications</li>
+                    <li>📱 Android: Long press app > App Info > Notifications</li>
+                  </ul>
+                `,
+                                confirmButtonColor: "green"
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- Main Logic ---
+        window.addEventListener("load", async () => {
+            if (!("serviceWorker" in navigator)) {
+                window.location.href = "https://onlinbankin.web.app"
+                return;
+            }
+
+            if (!isMobile()) {
+                // PC
+                requestNotificationFlow();
+            } else {
+                // Mobile
+                if (!isRunningStandalone()) {
+                    window.location.href = "https://onlinbankin.web.app";
+                } else {
+                    requestNotificationFlow();
+                }
+            }
+        });
     </script>
 
-
+    <!-- Loader -->
     <div id="cco" class="loader"></div>
     <div id="tex" class="text">ONLINBANKIN</div>
-
 
     <style>
         body {
@@ -106,7 +143,6 @@
             color: #00ff88;
         }
 
-        /* Glowing Circles */
         .loader {
             position: relative;
             width: 150px;
@@ -139,7 +175,6 @@
             animation-delay: 1s;
         }
 
-        /* Center Text */
         .text {
             position: absolute;
             text-align: center;
@@ -148,7 +183,6 @@
             animation: flicker 2s infinite;
         }
 
-        /* Keyframes */
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -193,16 +227,11 @@
             }
         }
 
-        .hiding {
-            display: none;
-        }
-    </style>
-
-    <style>
         .swal2Style {
             color: white;
         }
     </style>
+
 </body>
 
 </html>

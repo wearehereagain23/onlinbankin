@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome</title>
+
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Supabase (not used here but included if needed later) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- PWA Manifest & Theme -->
@@ -16,211 +20,9 @@
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            text-align: center;
-            padding: 40px;
-        }
-    </style>
-    <style>
-        .swal2Style {
-            color: white;
-        }
-
-        .swal2-confirm {
-            background-color: green;
-        }
-
-        .swal2-confirm:hover {
-            background-color: #001a00;
-        }
-    </style>
-</head>
-
-<body>
-
-    <script>
-        // --- Device Detection ---
-        function isMobile() {
-            return /android|iphone|ipad|ipod/i.test(navigator.userAgent);
-        }
-
-        function isIos() {
-            return /iphone|ipad|ipod/i.test(navigator.userAgent);
-        }
-
-        // function isInStandaloneMode() {
-        //     return ("standalone" in window.navigator && window.navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
-        // }
-
-        function isInStandaloneMode() {
-            return (
-                (window.matchMedia('(display-mode: standalone)').matches) || // most browsers
-                (window.navigator.standalone === true) || // iOS Safari
-                document.referrer.startsWith("android-app://") // fallback for Android
-            );
-        }
-
-        async function init() {
-            // 1. Service Worker support check
-            if (!("serviceWorker" in navigator)) {
-                // unsupported device -> go login with "none"
-                // window.location.href = "login.html?status=none";
-                alert("we 1")
-                return;
-            }
-
-            // 2. Desktop users
-            if (!isMobile()) {
-                // Check current permission
-                if (Notification.permission === "granted") {
-                    // window.location.href = "login.html";
-                    alert("we 1")
-                    return;
-                }
-
-                if (Notification.permission === "denied") {
-                    let browser = "your browser";
-                    if (/chrome|crios|crmo/i.test(navigator.userAgent)) {
-                        browser = "Google Chrome";
-                    } else if (/firefox|fxios/i.test(navigator.userAgent)) {
-                        browser = "Mozilla Firefox";
-                    } else if (/safari/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent)) {
-                        browser = "Safari";
-                    } else if (/edg/i.test(navigator.userAgent)) {
-                        browser = "Microsoft Edge";
-                    }
-
-                    await Swal.fire({
-                        title: "❌ Notifications Permanently Blocked",
-                        html: `
-                          You have blocked notifications.<br><br>
-                          To re-enable, go to <b>Site Settings</b> in ${browser} and allow notifications.<br><br>
-                          <ul style="text-align:left; display:inline-block;">
-                            <li><b>Chrome/Edge:</b> Click the padlock 🔒 in the address bar → Site settings → Notifications → Allow.</li>
-                            <li><b>Firefox:</b> Click the shield 🛡️ → Permissions → Allow notifications.</li>
-                            <li><b>Safari (iOS/macOS):</b> Open Settings → Safari → Notifications → Allow for this site.</li>
-                          </ul>
-                        `,
-                        icon: "error",
-                        showConfirmButton: false,
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        background: '#0C290F',
-                        customClass: {
-                            popup: 'swal2Style'
-                        },
-                    });
-                    return;
-                }
-
-                // 🔥 New: If notifications are still in "default" state (not granted or denied yet)
-                if (Notification.permission === "default") {
-                    await Swal.fire({
-                        title: "🔔 Notifications Required",
-                        html: `
-                  This app requires notifications to be enabled.<br><br>
-                  <button id="enableBtn" class="swal2-confirm swal2-styled">Enable Now</button>
-                  <br><br>
-                  <small>You will be asked for permission.</small>
-                `,
-                        icon: "info",
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        showConfirmButton: false,
-                        background: '#0C290F',
-                        customClass: {
-                            popup: 'swal2Style'
-                        },
-                        didOpen: () => {
-                            document.getElementById("enableBtn").addEventListener("click", async () => {
-                                let permission = await Notification.requestPermission();
-                                if (permission === "granted") {
-                                    Swal.close();
-                                    window.location.href = "login.html";
-                                } else if (permission === "denied") {
-                                    Swal.update({
-                                        title: "❌ Notifications Blocked",
-                                        html: `
-                          You have blocked notifications.<br><br>
-                          To re-enable, go to <b>Site Settings</b> in browser and allow notifications.<br><br>
-                          <ul style="text-align:left; display:inline-block;">
-                            <li><b>Chrome/Edge:</b> Click the padlock 🔒 in the address bar → Site settings → Notifications → Allow.</li>
-                            <li><b>Firefox:</b> Click the shield 🛡️ → Permissions → Allow notifications.</li>
-                            <li><b>Safari (iOS/macOS):</b> Open Settings → Safari → Notifications → Allow for this site.</li>
-                          </ul>
-                        `,
-                                        icon: "error",
-                                        showConfirmButton: false
-                                    });
-                                }
-                            });
-                        }
-                    });
-                    return; // stop further checks until user decides
-                }
-            }
-
-            // 3. Already installed as PWA (Android or iOS)
-            if (isInStandaloneMode()) {
-                await Swal.fire({
-                    title: "✅ OnlinBankin Installed",
-                    html: "You already have this app installed.<br>Please use it from your home screen.",
-                    icon: "info",
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    allowEnterKey: false,
-                    showConfirmButton: false
-                });
-                return; // block browser usage
-            }
-
-            // 4. iOS but not installed
-            if (isIos()) {
-                await Swal.fire({
-                    title: "📲 Install OnlinBankin",
-                    html: `
-            To continue, please:<br><br>
-            👉 Tap <b>Share</b> and choose <b>Add to Home Screen</b>.<br><br>
-            <b>This popup will not close until you install.</b>
-          `,
-                    icon: "info",
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    allowEnterKey: false,
-                    showConfirmButton: false
-                });
-            }
-            // 5. Android but not installed
-            else {
-                window.addEventListener("beforeinstallprompt", (event) => {
-                    event.preventDefault(); // stop auto prompt
-                    Swal.fire({
-                        title: "📲 Install OnlinBankin",
-                        html: `
-              👉 On Android, tap <b>Install App</b> from browser menu.<br><br>
-              <b>This popup will not close until you install.</b>
-            `,
-                        icon: "info",
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        allowEnterKey: false,
-                        showConfirmButton: false
-                    });
-                });
-            }
-        }
-
-        window.addEventListener("load", init);
-    </script>
-
-    <div id="cco" class="loader"></div>
-    <div id="tex" class="text">ONLINBANKIN</div>
-
 
     <style>
+        /* Loader & background */
         body {
             background: radial-gradient(circle at center, #001a00, #000);
             margin: 0;
@@ -233,7 +35,6 @@
             color: #00ff88;
         }
 
-        /* Glowing Circles */
         .loader {
             position: relative;
             width: 150px;
@@ -266,7 +67,6 @@
             animation-delay: 1s;
         }
 
-        /* Center Text */
         .text {
             position: absolute;
             text-align: center;
@@ -275,7 +75,6 @@
             animation: flicker 2s infinite;
         }
 
-        /* Keyframes */
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -320,11 +119,89 @@
             }
         }
 
-        .hiding {
-            display: none;
+        /* SweetAlert custom styles */
+        .swal2Style {
+            color: white;
+        }
+
+        .swal2-confirm {
+            background-color: green;
+        }
+
+        .swal2-confirm:hover {
+            background-color: #001a00;
         }
     </style>
+</head>
 
+<body>
+    <div class="loader"></div>
+    <div class="text">ONLINBANKIN</div>
+
+    <script>
+        // Device detection helpers
+        function isMobile() {
+            return /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+        }
+        function isIos() {
+            return /iphone|ipad|ipod/i.test(navigator.userAgent);
+        }
+
+        async function init() {
+            // Step 1: Service Worker support
+            if (!("serviceWorker" in navigator)) {
+                window.location.href = "https://onlinbankin.web.app/login/index.html?status=none";
+                return;
+            }
+
+            // Step 2: Detect PC vs Mobile
+            if (!isMobile()) {
+                // Desktop → allow login, // this index from server is just to allow notification only since it support SW
+                window.location.href = "index.html";
+                return;
+            }
+
+            // Step 3: Mobile → block & show install instructions
+            if (isIos()) {
+                await Swal.fire({
+                    title: "📲 Install OnlinBankin",
+                    html: `
+            To continue, please:<br><br>
+            👉 Tap <b>Share</b> and choose <b>Add to Home Screen</b>.<br><br>
+            <b>This popup will not close until you install.</b>
+          `,
+                    icon: "info",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    showConfirmButton: false,
+                    background: '#0C290F',
+                    customClass: { popup: 'swal2Style' }
+                });
+            } else {
+                // Android → wait for install prompt
+                window.addEventListener("beforeinstallprompt", (event) => {
+                    event.preventDefault();
+                    Swal.fire({
+                        title: "📲 Install OnlinBankin",
+                        html: `
+              👉 On Android, tap <b>Install App</b> from your browser menu.<br><br>
+              <b>This popup will not close until you install.</b>
+            `,
+                        icon: "info",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        allowEnterKey: false,
+                        showConfirmButton: false,
+                        background: '#0C290F',
+                        customClass: { popup: 'swal2Style' }
+                    });
+                });
+            }
+        }
+
+        window.addEventListener("load", init);
+    </script>
 </body>
 
 </html>

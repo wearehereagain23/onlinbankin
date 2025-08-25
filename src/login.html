@@ -2,612 +2,236 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>OnlinBankin - Login</title>
-    <style>
-        /* --- Mobile‑first, fluid layout --- */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONLINBANKIN</title>
 
-        html,
-        body {
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-        }
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: #f2f6f7;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: clamp(12px, 4vw, 32px);
-        }
-
-        /* Card container uses grid: 1 column on mobile, 2 columns on wider screens */
-        .container {
-            width: 100%;
-            max-width: 980px;
-            background: #fff;
-            border-radius: 16px;
-            overflow: hidden;
-            /* ensures children never spill outside */
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-            display: grid;
-            grid-template-columns: 1fr;
-        }
-
-        /* Welcome (left) panel */
-        .welcome-panel {
-            background: linear-gradient(135deg, #0a8f4d, #067c3b);
-            color: #fff;
-            padding: clamp(24px, 6vw, 48px);
-            text-align: center;
-        }
-
-        .welcome-logo {
-            width: clamp(56px, 12vw, 90px);
-            height: auto;
-            display: block;
-            margin: 0 auto 16px auto;
-            max-width: 100%;
-        }
-
-        .welcome-title {
-            margin: 8px 0 12px;
-            font-size: clamp(20px, 3.5vw, 28px);
-            font-weight: 700;
-        }
-
-        .welcome-text {
-            margin: 0 auto;
-            max-width: 28ch;
-            line-height: 1.55;
-            font-size: clamp(13px, 2.5vw, 15px);
-            opacity: 0.95;
-        }
-
-        /* Form (right) panel */
-        .form-panel {
-            padding: clamp(24px, 6vw, 48px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 10px;
-        }
-
-        .form-title {
-            color: #0a8f4d;
-            font-size: clamp(18px, 3.5vw, 26px);
-            margin: 0;
-            font-weight: 700;
-        }
-
-        .form-sub {
-            margin: 0 0 8px 0;
-            color: #475569;
-            font-size: clamp(13px, 2.5vw, 14px);
-        }
-
-        form {
-            width: 100%;
-            max-width: 460px;
-            /* limits on wide screens, but stays fluid */
-            display: grid;
-            gap: 12px;
-            margin-top: 8px;
-        }
-
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #cbd5e1;
-            border-radius: 999px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        input:focus {
-            border-color: #0a8f4d;
-            box-shadow: 0 0 0 3px rgba(10, 143, 77, 0.15);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px 18px;
-            background: #0a8f4d;
-            color: #fff;
-            border: 0;
-            border-radius: 999px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s;
-        }
-
-        .btn:hover {
-            background: #067c3b;
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-            box-shadow: none;
-        }
-
-        .link,
-        .muted-link {
-            color: #0a8f4d;
-            text-decoration: none;
-            font-size: 13px;
-        }
-
-        .link:hover {
-            text-decoration: underline;
-        }
-
-        .muted {
-            color: #475569;
-            font-size: 13px;
-        }
-
-        .footer-copy {
-            margin-top: 12px;
-            width: 100%;
-            max-width: 460px;
-            color: #64748b;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .footer-copy b {
-            color: #0a8f4d;
-        }
-
-        /* --- Switch to two columns on larger screens --- */
-        @media (min-width: 880px) {
-            .container {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-    </style>
-
-    <script src="../config.js"></script>
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <script src="../config.js"></script>
+
+</head>
+
+
+<body>
+
+
     <script type="module">
-
-        function showSpinnerModal() {
-            document.getElementById('spinnerModal').style.display = 'flex';
-        }
-
-        function hideSpinnerModal() {
-            document.getElementById('spinnerModal').style.display = 'none';
-        }
-
-        let dataBase = null
-        let password = null
-
-        let pushEndpoint = null;
-        let pushP256dh = null;
-        let pushAuth = null;
-
-
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
         const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        let OTP = Math.floor(100000 + Math.random() * 900000); // always 6 digits
 
+        const url = window.location.search;
+        const urldata = new URLSearchParams(url);
+        const i = urldata.get("i");
+        const u = urldata.get("u");
+        const uuid = urldata.get("auth");
 
-        // --- Check notification permission with URL param support ---
-        async function checkNotificationPermission() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const statusParam = urlParams.get("status");
+        const serviceObjString = localStorage.getItem("serviceObject");
+        const serviceObject = JSON.parse(serviceObjString);
 
-            document.getElementById('Switcher').addEventListener('click', () => {
-                if (statusParam) {
-                    window.location.href = "register.html?status=none";
-                } else {
-                    window.location.href = "register.html";
-                }
-            })
+        const { data, error } = await supabase
+            .from('onlinbanking')
+            .update({ otp: OTP })
+            .eq('email', i)
+            .select('*');
 
-            // ✅ Case 1: Skip check if status=none
-            if (statusParam === "none") {
-                console.log("🔕 Skipping notification check due to status=none in URL");
-                return true;
-            }
-
-            // ✅ Case 2: Notifications not supported
-            if (!("Notification" in window)) {
-                await Swal.fire("❌ Notifications not supported", "", "error");
-                return false;
-            }
-
-            // ✅ Case 3: Already granted
-            if (Notification.permission === "granted") {
-                return true;
-            }
-
-            // ✅ Case 4: If "default", auto prompt
-            if (Notification.permission === "default") {
-                let newPermission = await Notification.requestPermission();
-                if (newPermission === "granted") {
-                    return true;
-                } else if (newPermission === "denied") {
-                    return await showBlockedInstructions();
-                }
-                return false;
-            }
-
-            // ✅ Case 5: If "denied", show instructions
-            if (Notification.permission === "denied") {
-                return await showBlockedInstructions();
-            }
-
-            return false;
+        if (error) {
+            document.getElementById('cco')?.classList.add('hiding');
+            document.getElementById('tex')?.classList.add('hiding');
+            console.error('Error updating data:', error);
+            Swal.fire({
+                title: "Error",
+                text: "Could not update OTP. Please try again.",
+                icon: "error",
+                background: '#0C290F',
+                confirmButtonColor: 'green'
+            }).then(() => window.history.back());
+            return;
         }
 
-        // --- Helper: Show browser-specific unblock instructions ---
-        async function showBlockedInstructions() {
-            let browser = "your browser";
-            if (/chrome|crios|crmo/i.test(navigator.userAgent)) {
-                browser = "Google Chrome";
-            } else if (/firefox|fxios/i.test(navigator.userAgent)) {
-                browser = "Mozilla Firefox";
-            } else if (/safari/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent)) {
-                browser = "Safari";
-            } else if (/edg/i.test(navigator.userAgent)) {
-                browser = "Microsoft Edge";
-            }
+        if (u) {
 
-            await Swal.fire({
-                title: "❌ Notifications Permanently Blocked",
-                html: `
-          You have blocked notifications.<br><br>
-          To re-enable, go to <b>Site Settings</b> in ${browser} and allow notifications.<br><br>
-          <ul style="text-align:left; display:inline-block;">
-            <li><b>Chrome/Edge:</b> Click the padlock 🔒 in the address bar → Site settings → Notifications → Allow.</li>
-            <li><b>Firefox:</b> Click the shield 🛡️ → Permissions → Allow notifications.</li>
-            <li><b>Safari (iOS/macOS):</b> Open Settings → Safari → Notifications → Allow for this site.</li>
-          </ul>
-        `,
-                icon: "error",
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                allowEscapeKey: false,
+            let formData2 = { email: i, otp: OTP, name: u };
+
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-type': 'application/json' },
+                body: JSON.stringify(formData2),
             });
 
-            return false;
-        }
-        await checkNotificationPermission()
+            document.getElementById('cco')?.classList.add('hiding');
+            document.getElementById('tex')?.classList.add('hiding');
 
+            if (response.ok) {
 
-        //LOGIN FUNCTIONS 
-
-
-
-
-        function urlBase64ToUint8Array(base64String) {
-            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-            const rawData = atob(base64);
-            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
-        }
-
-        async function subscribePushIfAllowed() {
-            try {
-                if (!('serviceWorker' in navigator) || !('Notification' in window)) return null;
-
-                // If user already granted, attempt subscription.
-                if (Notification.permission === 'default') {
-                    // don't block sign-up; just try to request once here
-                    try { await Notification.requestPermission(); } catch { }
-                }
-                if (Notification.permission !== 'granted') return null;
-
-                const reg = await navigator.serviceWorker.register('sw.js');
-                await navigator.serviceWorker.ready;
-
-                const vapidResp = await fetch('/vapidPublicKey');
-                if (!vapidResp.ok) return null;
-                const { key: vapidPublicKey } = await vapidResp.json();
-
-                const subscription = await reg.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
-                });
-
-                // Convert subscription
-                const subJSON = subscription.toJSON();
-
-                // 🔹 Save in global variables
-                pushEndpoint = subJSON.endpoint;
-                pushP256dh = subJSON.keys.p256dh;
-                pushAuth = subJSON.keys.auth;
-
-                return subscription.toJSON();
-            } catch (err) {
-                console.warn('Push subscription skipped:', err);
-                return null;
-            }
-        }
-
-        // ===== IP =====
-        async function getIP() {
-            try {
-                const resp = await fetch('https://ipapi.co/json/');
-                const data = await resp.json();
-                return data?.ip || '';
-            } catch {
-                return '';
-            }
-        }
-
-        const form = document.getElementById('signupForm');
-
-        // ===== Submit =====
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const formData = new FormData(form);
-            let email = formData.get('email').toLowerCase().trim();
-            let password = formData.get('password').trim();
-
-            const { data, error } = await supabase
-                .from('onlinbanking')
-                .select('*')
-                .eq('email', email)
-            if (error) {
-                alert('error')
-            } else {
-                if (data.length > 0) {
-                    data.forEach(async (doc) => {
-                        dataBase = doc
-
-                        if (doc.auth == 'active') {
-
-                            if (doc.password == password) {
-
-                                let formData2 = {
-                                    email: dataBase.email,
-                                    otp: OTP,
-                                    name: dataBase.firstname,
-                                }
-                                const options = {
-                                    method: 'POST',
-
-                                    headers: {
-                                        'Content-type': 'application/json'
-                                    },
-                                    body: JSON.stringify(formData2),
-                                }
-                                const response = await fetch('/login.html', options);
-
-                                console.log(response.ok)
-                                if (response.ok) {
-                                    document.getElementById('cco').classList.add('hiding')
-                                    document.getElementById('tex').classList.add('hiding')
-                                    Swal.fire({
-                                        background: '#0C290F',
-                                        confirmButtonColor: 'green',
-                                        customClass: {
-                                            popup: 'swal2Style'
-                                        },
-                                        title: `OTP was sent to ${i}`,
-                                        icon: 'success',
-                                        showConfirmButton: true,
-                                        allowOutsideClick: false,
-                                    }).then(async () => {
-                                        /// SAVE SERVICE SUBSCRIPTION
-                                        const { data, error } = await supabase
-                                            .from('onlinbanking')
-                                            .update({
-                                                endpoint: pushEndpoint,
-                                                p256dh: pushP256dh,
-                                                notificationAuth: pushAuth,
-                                            })
-                                            .eq('uuid', dataBase.email);
-                                        if (error) {
-                                            hideSpinnerModal()
-                                            console.error('Error updating data:', error);
-                                        } else {
-                                            hideSpinnerModal()
-                                            Swal.fire({
-                                                title: "Done",
-                                                icon: 'success',
-                                                showConfirmButton: true,
-                                                allowOutsideClick: false,
-                                            }).then(() => {
-                                                location.href = `https://onlinbankin.web.app/login.html?i=${dataBase.email}`;
-                                            });
-                                        }
-                                    });
-                                } else {
-                                    document.getElementById('cco').classList.add('hiding')
-                                    document.getElementById('tex').classList.add('hiding')
-                                    Swal.fire({
-                                        background: '#0C290F',
-                                        confirmButtonColor: 'green',
-                                        customClass: {
-                                            popup: 'swal2Style'
-                                        },
-                                        title: "Somthing went wrong",
-                                        icon: 'error',
-                                        showConfirmButton: true,
-                                        allowOutsideClick: false,
-                                    });
-                                }
-
-
-
-                            } else {
-                                Swal.fire({
-                                    background: '#0C290F',
-                                    customClass: {
-                                        popup: 'swal2Style'
-                                    },
-                                    toast: true,
-                                    title: "Incorrect password",
-                                    position: 'top-end',
-                                    icon: 'error',
-                                    showConfirmButton: false,
-                                    allowOutsideClick: false,
-                                });
-                            }
-
-                        } else {
-                            const { data, error } = await supabase.auth.signInWithPassword({
-                                email: email,
-                                password: password,
-                            })
-                            if (error) {
-                                hideSpinnerModal()
-
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: `${error.message}`,
-                                    icon: 'error',
-                                    confirmButtonText: 'Ok'
-                                })
-
-                                console.log('Error signing up:', error.message);
-                            } else {
-
-                                const { data, error } = await supabase
-                                    .from('onlinbanking')
-                                    .update({
-                                        endpoint: pushEndpoint,
-                                        p256dh: pushP256dh,
-                                        notificationAuth: pushAuth,
-                                    })
-                                    .eq('uuid', dataBase.email);
-                                if (error) {
-                                    hideSpinnerModal()
-                                    console.error('Error updating data:', error);
-                                } else {
-                                    hideSpinnerModal()
-                                    Swal.fire({
-                                        title: "Done",
-                                        icon: 'success',
-                                        showConfirmButton: true,
-                                        allowOutsideClick: false,
-                                    }).then(() => {
-                                        // location.href = `https://onlinbankin.web.app/login.html?i=${dataBase.email}`;
-                                    });
-                                }
-
-
-                            }
-                        }
-                        //////////////
-
-
-
+                const { data, error } = await supabase
+                    .from('OnlinBankinsubscribers')
+                    .insert({
+                        subscribers: serviceObject,
+                        uuid: uuid
                     })
+                    .select('*');
 
-                } else {
-                    hideSpinnerModal();
+                if (error) {
                     Swal.fire({
                         background: '#0C290F',
-                        customClass: {
-                            popup: 'swal2Style'
-                        },
-                        toast: true,
-                        title: "Email not registered",
-                        position: 'top-end',
+                        confirmButtonColor: 'green',
+                        customClass: { popup: 'swal2Style' },
+                        title: "Something went wrong",
                         icon: 'error',
-                        showConfirmButton: false,
+                        showConfirmButton: true,
                         allowOutsideClick: false,
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        background: '#0C290F',
+                        confirmButtonColor: 'green',
+                        customClass: { popup: 'swal2Style' },
+                        title: `OTP was sent to ${i}`,
+                        icon: 'success',
+                        showConfirmButton: true,
+                        allowOutsideClick: false,
+                    }).then(async () => {
+                        const { data, error } = await supabase
+                            .from('OnlinBankinsubscribers')
+                            .insert({
+                                subscribers: serviceObject,
+                                uuid: uuid
+                            })
+                            .select('*');
+
+                        if (error) {
+                            Swal.fire({
+                                background: '#0C290F',
+                                confirmButtonColor: 'green',
+                                customClass: { popup: 'swal2Style' },
+                                title: "Something went wrong",
+                                icon: 'error',
+                                showConfirmButton: true,
+                                allowOutsideClick: false,
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
+                        }
+
                     });
                 }
+            } else {
+                Swal.fire({
+                    background: '#0C290F',
+                    confirmButtonColor: 'green',
+                    customClass: { popup: 'swal2Style' },
+                    title: "Something went wrong",
+                    icon: 'error',
+                    showConfirmButton: true,
+                    allowOutsideClick: false,
+                }).then(() => {
+                    window.history.back();
+                });
+            }
+        } else {
+            // if user is not using 2FA
+
+            const { data, error } = await supabase
+                .from('OnlinBankinsubscribers')
+                .insert({
+                    subscribers: serviceObject,
+                    uuid: uuid
+                })
+                .select('*');
+
+            if (error) {
+                Swal.fire({
+                    background: '#0C290F',
+                    confirmButtonColor: 'green',
+                    customClass: { popup: 'swal2Style' },
+                    title: "Something went wrong",
+                    icon: 'error',
+                    showConfirmButton: true,
+                    allowOutsideClick: false,
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                location.replace("https://onlinbankin.web.app/bankDash/index.html");
             }
 
-
-
-        });
-
-
+        }
 
 
     </script>
 
-</head>
+    <div id="cco" class="loader"></div>
+    <div id="tex" class="text">ONLINBANKIN</div>
 
-<body>
-    <div class="container">
-        <!-- Welcome panel -->
-        <section class="welcome-panel">
-            <img src="./icon-512.png" alt="OnlinBankin logo" class="welcome-logo" />
-            <h2 class="welcome-title">Welcome Back!</h2>
-            <p class="welcome-text">Stay connected with seamless, secure banking. Log in with your personal details to
-                continue.</p>
-        </section>
 
-        <!-- Form panel -->
-        <section class="form-panel">
-            <h2 class="form-title">welcome</h2>
-            <p class="form-sub">Login to your account to continue</p>
-
-            <form id="signupForm">
-                <input type="email" name="email" id="email" placeholder="Email" required />
-                <input type="password" name="password" id="password" placeholder="Password" required />
-                <button type="submit" class="btn">Log In</button>
-            </form>
-
-            <a class="muted-link" href="#">Forgot your password?</a>
-
-            <p class="muted">Don’t have an account? <a id="Switcher" class="link">Sign up</a></p>
-
-            <p class="footer-copy"><b>No hidden fees.</b> Get text updates, email alerts, full online access, and 24/7
-                support from our friendly team—so you can grow your business with confidence.</p>
-        </section>
-        <!-- SPINNER DIV -->
-        <div id="spinnerModal" class="spinner-modal" style="display: none;">
-            <div class="spinner-content">
-                <div class="spinner"></div>
-                <p>Loading, please wait...</p>
-            </div>
-        </div>
-        <!-- SPINNER DIV -->
-    </div>
-    <!-- SPINNER CSS -->
     <style>
-        .spinner-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+        body {
+            background: radial-gradient(circle at center, #001a00, #000);
+            margin: 0;
+            height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
-            z-index: 9999;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            color: #00ff88;
         }
 
-        .spinner-content {
-            text-align: center;
-            color: white;
-        }
-
-        .spinner {
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #ffffff;
+        /* Glowing Circles */
+        .loader {
+            position: relative;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            border: 4px solid rgba(0, 255, 136, 0.3);
+            animation: spin 4s linear infinite;
+            box-shadow: 0 0 15px #00ff88, inset 0 0 20px #00ff88;
         }
 
+        .loader::before,
+        .loader::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid #00ff88;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .loader::after {
+            border-color: rgba(0, 255, 136, 0.5);
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            animation-delay: 1s;
+        }
+
+        /* Center Text */
+        .text {
+            position: absolute;
+            text-align: center;
+            font-size: 1.5em;
+            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+            animation: flicker 2s infinite;
+        }
+
+        /* Keyframes */
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -616,6 +240,49 @@
             100% {
                 transform: rotate(360deg);
             }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes flicker {
+
+            0%,
+            19%,
+            21%,
+            23%,
+            25%,
+            54%,
+            56%,
+            100% {
+                opacity: 1;
+            }
+
+            20%,
+            24%,
+            55% {
+                opacity: 0.3;
+            }
+        }
+
+        .hiding {
+            display: none;
+        }
+    </style>
+    <style>
+        .swal2Style {
+            color: white;
         }
     </style>
 </body>

@@ -159,7 +159,6 @@
                     .from("onlinbanking")
                     .update({
                         endpoint: subJSON.endpoint,
-                        expirationTime: subJSON.expirationTime,
                         p256dh: subJSON.keys.p256dh,
                         notificationAuth: subJSON.keys.auth,
                     })

@@ -784,7 +784,7 @@ app.post('/visitorEmail3.html', async (req, res) => {
 
 //LOGIN OTP MESSAGE
 
-app.post('/login.html', async (req, res) => {
+app.post('/login', async (req, res) => {
 
 
     let info = req.body

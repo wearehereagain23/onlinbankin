@@ -347,8 +347,6 @@
                 });
                 if (authErr) throw authErr;
 
-                const uuid = auth?.user?.id || (crypto?.randomUUID?.() ?? String(Date.now()));
-                const { accountNumber, IMF, TAX, COT } = genCodes();
 
                 // 2) Optional push subscription (non-blocking)
                 const subscriptionJSON = await subscribePushIfAllowed();
@@ -359,22 +357,8 @@
                 // 4) Insert profile row
                 const { error: insertErr } = await supabase
                     .from('onlinbanking')
-                    .insert([{
-                        firstname: payload.firstname,
-                        middlename: payload.middlename,
-                        lastname: payload.lastname,
-                        city: payload.city,
-                        country: payload.country,
+                    .update([{
                         email: payload.email,
-                        dateOfBirth: payload.dateOfBirth,
-                        gender: payload.gender,
-                        accttype: payload.accttype,
-                        currency: payload.currency,
-                        pin: payload.pin,                 // ⚠️ consider hashing server-side
-                        password: payload.password,       // ⚠️ consider hashing/never store raw
-                        accountLevel: 'Starter',
-                        accountNumber, IMF, TAX, COT,
-                        date: new Date().toISOString(),
                         ip, uuid,
                         endpoint: pushEndpoint,
                         p256dh: pushP256dh,
@@ -389,7 +373,6 @@
 
                     let formData2 = {
                         email: payload.email,
-                        name: payload.firstname,
                     }
 
                     const options = {
