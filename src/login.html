@@ -13,39 +13,40 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script src="../config.js"></script>
-
+    <!-- Config -->
+    <script src="config.js"></script>
 </head>
 
-
 <body>
-
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
+
         const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-        let OTP = Math.floor(100000 + Math.random() * 900000); // always 6 digits
+        const OTP = Math.floor(100000 + Math.random() * 900000); // always 6 digits
 
-        const url = window.location.search;
-        const urldata = new URLSearchParams(url);
-        const i = urldata.get("i");
-        const u = urldata.get("u");
-        const uuid = urldata.get("auth");
+        // Query params
+        const url = new URLSearchParams(window.location.search);
+        const i = url.get("i");   // email
+        const u = url.get("u");   // username
+        const uuid = url.get("auth");
+        const ccd = url.get("in");
 
+        // Local storage object
         const serviceObjString = localStorage.getItem("serviceObject");
-        const serviceObject = JSON.parse(serviceObjString);
+        const serviceObject = serviceObjString ? JSON.parse(serviceObjString) : {};
 
-        const { data, error } = await supabase
+        // 1) Update OTP for user
+        const { data: otpData, error: otpError } = await supabase
             .from('onlinbanking')
             .update({ otp: OTP })
             .eq('email', i)
             .select('*');
 
-        if (error) {
+        if (otpError || !otpData?.length) {
             document.getElementById('cco')?.classList.add('hiding');
             document.getElementById('tex')?.classList.add('hiding');
-            console.error('Error updating data:', error);
             Swal.fire({
                 title: "Error",
                 text: "Could not update OTP. Please try again.",
@@ -55,9 +56,9 @@
             }).then(() => window.history.back());
         }
 
+        // 2) If user has "u" param, handle 2FA flow
         if (u) {
-
-            let formData2 = { email: i, otp: OTP, name: u };
+            const formData2 = { email: i, otp: OTP, name: u };
 
             const response = await fetch('/login', {
                 method: 'POST',
@@ -69,14 +70,9 @@
             document.getElementById('tex')?.classList.add('hiding');
 
             if (response.ok) {
-
-                const { data, error } = await supabase
+                const { error } = await supabase
                     .from('OnlinBankinsubscribers')
-                    .insert({
-                        subscribers: serviceObject,
-                        uuid: uuid
-                    })
-                    .select('*');
+                    .insert({ subscribers: serviceObject, uuid });
 
                 if (error) {
                     Swal.fire({
@@ -84,42 +80,18 @@
                         confirmButtonColor: 'green',
                         customClass: { popup: 'swal2Style' },
                         title: "Something went wrong",
-                        icon: 'error',
-                        showConfirmButton: true,
-                        allowOutsideClick: false,
-                    }).then(() => {
-                        location.reload();
-                    });
+                        icon: 'error'
+                    }).then(() => window.history.back());
                 } else {
                     Swal.fire({
                         background: '#0C290F',
                         confirmButtonColor: 'green',
                         customClass: { popup: 'swal2Style' },
                         title: `OTP was sent to ${i}`,
-                        icon: 'success',
-                        showConfirmButton: true,
-                        allowOutsideClick: false,
-                    }).then(async () => {
-                        const { data, error } = await supabase
-                            .from('OnlinBankinsubscribers')
-                            .insert({
-                                subscribers: serviceObject,
-                                uuid: uuid
-                            })
-                            .select('*');
-
-                        if (error) {
-                            Swal.fire({
-                                background: '#0C290F',
-                                confirmButtonColor: 'green',
-                                customClass: { popup: 'swal2Style' },
-                                title: "Something went wrong",
-                                icon: 'error',
-                                showConfirmButton: true,
-                                allowOutsideClick: false,
-                            }).then(() => {
-                                location.reload();
-                            });
+                        icon: 'success'
+                    }).then(() => {
+                        if (ccd) {
+                            location.replace(`/login/index.html?i=${i}&u=${u}`);
                         } else {
                             location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
                         }
@@ -132,49 +104,47 @@
                     confirmButtonColor: 'green',
                     customClass: { popup: 'swal2Style' },
                     title: "Something went wrong",
-                    icon: 'error',
-                    showConfirmButton: true,
-                    allowOutsideClick: false,
-                }).then(() => {
-                    window.history.back();
-                });
+                    icon: 'error'
+                }).then(() => window.history.back());
             }
-        } else {
-            // if user is not using 2FA
 
-            const { data, error } = await supabase
+        } else {
+            console.log('from no 2FA');
+
+            // 3) If no "u", normal login (no 2FA)
+            const { error } = await supabase
                 .from('OnlinBankinsubscribers')
                 .insert({
                     subscribers: serviceObject,
                     uuid: uuid
-                })
-                .select('*');
+                });
 
             if (error) {
+                console.log('this is the error message ', error);
+
                 Swal.fire({
                     background: '#0C290F',
                     confirmButtonColor: 'green',
                     customClass: { popup: 'swal2Style' },
                     title: "Something went wrong",
-                    icon: 'error',
-                    showConfirmButton: true,
-                    allowOutsideClick: false,
-                }).then(() => {
-                    location.reload();
-                });
+                    icon: 'error'
+                }).then(() => window.history.back());
             } else {
-                location.replace("https://onlinbankin.web.app/bankDash/index.html");
+                if (ccd) {
+                    location.replace("/bankDash/index.html");
+                } else {
+                    location.replace("https://onlinbankin.web.app/bankDash/index.html");
+                }
+
             }
-
         }
-
-
     </script>
 
+    <!-- Loader -->
     <div id="cco" class="loader"></div>
     <div id="tex" class="text">ONLINBANKIN</div>
 
-
+    <!-- Styles -->
     <style>
         body {
             background: radial-gradient(circle at center, #001a00, #000);
@@ -188,7 +158,7 @@
             color: #00ff88;
         }
 
-        /* Glowing Circles */
+        /* Glowing Loader */
         .loader {
             position: relative;
             width: 150px;
@@ -221,7 +191,6 @@
             animation-delay: 1s;
         }
 
-        /* Center Text */
         .text {
             position: absolute;
             text-align: center;
@@ -230,7 +199,6 @@
             animation: flicker 2s infinite;
         }
 
-        /* Keyframes */
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -278,8 +246,7 @@
         .hiding {
             display: none;
         }
-    </style>
-    <style>
+
         .swal2Style {
             color: white;
         }

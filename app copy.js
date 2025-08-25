@@ -31,18 +31,6 @@ app.get("/vapidPublicKey", (req, res) => {
     res.json({ key: process.env.PUBLIC_VAPID_KEY });
 });
 
-app.get("/proxy", async (req, res) => {
-    const url = req.query.url; // e.g. /proxy?url=https://example.com
-    try {
-        const response = await fetch(url);
-        const text = await response.text();
-
-        // Simple passthrough (no rewriting of assets yet)
-        res.send(text);
-    } catch (err) {
-        res.status(500).send("Error loading external site");
-    }
-});
 
 
 const ff = path.join(__dirname, '/src')
