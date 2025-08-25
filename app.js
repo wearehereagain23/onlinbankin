@@ -6,7 +6,6 @@ const nodemailer = require("nodemailer");
 const path = require('path');
 require("dotenv").config();
 const webpush = require("web-push");
-const fetch = require('"node-fetch"');
 
 const publicVapidKey = process.env.PUBLIC_VAPID_KEY;
 const privateVapidKey = process.env.PRIVATE_VAPID_KEY;
