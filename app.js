@@ -103,7 +103,7 @@ app.post("/subscribe", async (req, res) => {
 
 //REGISTRATION WELCOME MESSAGE
 
-app.post('/register.html', async (req, res) => {
+app.post('/register', async (req, res) => {
 
 
     let info = req.body

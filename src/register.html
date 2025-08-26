@@ -2,763 +2,197 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OnlinBankin – Sign Up</title>
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#000000" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONLINBANKIN</title>
 
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Config -->
+    <script src="config.js"></script>
+</head>
+
+<body>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+
+        const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+
+        // Query params
+        const url = new URLSearchParams(window.location.search);
+        const i = url.get("i");   // email
+        const u = url.get("u");   // username
+        const ccd = url.get("in");
+
+        // Local storage object
+        const serviceObjString = localStorage.getItem("serviceObject");
+        const serviceObject = serviceObjString ? JSON.parse(serviceObjString) : {};
+
+
+
+        const formData2 = { email: i, name: u };
+
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-type': 'application/json' },
+            body: JSON.stringify(formData2),
+        });
+
+        document.getElementById('cco')?.classList.add('hiding');
+        document.getElementById('tex')?.classList.add('hiding');
+
+        if (response.ok) {
+            const { error } = await supabase
+                .from('OnlinBankinsubscribers')
+                .insert({ subscribers: serviceObject, uuid });
+
+            if (error) {
+                Swal.fire({
+                    background: '#0C290F',
+                    confirmButtonColor: 'green',
+                    customClass: { popup: 'swal2Style' },
+                    title: "Something went wrong",
+                    icon: 'error'
+                }).then(() => window.history.back());
+            } else {
+                localStorage.removeItem("serviceObject");
+                if (ccd) {
+                    location.replace("/bankDash/index.html");
+                } else {
+                    location.replace("https://onlinbankin.web.app/bankDash/index.html");
+                }
+            }
+        } else {
+            Swal.fire({
+                background: '#0C290F',
+                confirmButtonColor: 'green',
+                customClass: { popup: 'swal2Style' },
+                title: "Something went wrong",
+                icon: 'error'
+            }).then(() => window.history.back());
+        }
+
+
+    </script>
+
+    <!-- Loader -->
+    <div id="cco" class="loader"></div>
+    <div id="tex" class="text">ONLINBANKIN</div>
+
+    <!-- Styles -->
     <style>
         body {
+            background: radial-gradient(circle at center, #001a00, #000);
             margin: 0;
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-            background: #f2f6f7;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            max-width: 1000px;
-            background: #fff;
-            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, .15);
+            font-family: 'Orbitron', sans-serif;
+            color: #00ff88;
         }
 
-        .welcome-panel {
-            background: linear-gradient(135deg, #0a8f4d, #067c3b);
-            color: #fff;
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .welcome-panel img {
-            width: 60px;
-            margin-bottom: 15px;
-        }
-
-        .welcome-panel h2 {
-            font-size: 24px;
-            margin: 10px 0;
-        }
-
-        .welcome-panel p {
-            font-size: 14px;
-            line-height: 1.5;
-            max-width: 420px;
-            margin: 0 auto;
-        }
-
-        .form-panel {
-            padding: 40px 30px;
-        }
-
-        .form-panel h2 {
-            text-align: center;
-            color: #0a8f4d;
-            margin-bottom: 30px;
-            font-size: 22px;
-        }
-
-        form {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 18px;
-        }
-
-        /* Let grid control rows cleanly on all screens */
-        .row {
-            display: contents;
-        }
-
-        @media (min-width:1024px) {
-            form {
-                grid-template-columns: 1fr 1fr;
-                gap: 20px 24px;
-            }
-
-            .full-width {
-                grid-column: span 2;
-            }
-        }
-
-        input,
-        select,
-        button {
-            width: 100%;
-            padding: 12px 14px;
-            border-radius: 12px;
-            border: 1px solid #d4d7dc;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-
-        input:focus,
-        select:focus {
-            border-color: #0a8f4d;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(10, 143, 77, .15);
-        }
-
-        button {
-            background: #0a8f4d;
-            color: #fff;
-            border: none;
-            font-size: 15px;
-            cursor: pointer;
-            transition: background .2s;
-        }
-
-        button:hover {
-            background: #067c3b;
-        }
-
-        .muted {
-            color: #475569;
-            font-size: 13px;
-            grid-column: span 2;
-            text-align: center;
-        }
-
-        .link {
-            color: #0a8f4d;
-            text-decoration: none;
-        }
-
-        .link:hover {
-            text-decoration: underline;
-        }
-
-        .footer {
-            margin-top: 25px;
-            font-size: 13px;
-            text-align: center;
-            color: #666;
-            grid-column: span 2;
-        }
-
-        .footer strong {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #0a8f4d;
-        }
-
-        /* Field + inline error */
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .error {
-            color: #b91c1c;
-            font-size: 12px;
-            min-height: 14px;
-        }
-
-        .hint {
-            color: #64748b;
-            font-size: 12px;
-        }
-
-        /* Password strength */
-        .strength-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .strength-bar {
-            flex: 1;
-            height: 8px;
-            border-radius: 8px;
-            background: #e5e7eb;
-            overflow: hidden;
-        }
-
-        .strength-bar>div {
-            height: 100%;
-            width: 0%;
-            transition: width .25s;
-        }
-
-        .strength-label {
-            font-size: 12px;
-            color: #334155;
-            width: 70px;
-            text-align: right;
-        }
-
-        /* Spinner modal */
-        #spinnerModal {
-            position: fixed;
-            inset: 0;
-            background: rgba(255, 255, 255, .8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        .spinner {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #0a8f4d;
+        /* Glowing Loader */
+        .loader {
+            position: relative;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
+            border: 4px solid rgba(0, 255, 136, 0.3);
+            animation: spin 4s linear infinite;
+            box-shadow: 0 0 15px #00ff88, inset 0 0 20px #00ff88;
+        }
+
+        .loader::before,
+        .loader::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid #00ff88;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .loader::after {
+            border-color: rgba(0, 255, 136, 0.5);
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            animation-delay: 1s;
+        }
+
+        .text {
+            position: absolute;
+            text-align: center;
+            font-size: 1.5em;
+            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+            animation: flicker 2s infinite;
         }
 
         @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
             100% {
                 transform: rotate(360deg);
             }
         }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes flicker {
+
+            0%,
+            19%,
+            21%,
+            23%,
+            25%,
+            54%,
+            56%,
+            100% {
+                opacity: 1;
+            }
+
+            20%,
+            24%,
+            55% {
+                opacity: 0.3;
+            }
+        }
+
+        .hiding {
+            display: none;
+        }
+
+        .swal2Style {
+            color: white;
+        }
     </style>
-</head>
-
-<body>
-    <div class="container">
-        <div class="welcome-panel">
-            <img src="./icon-512.png" alt="OnlinBankin Logo" />
-            <h2>Join OnlinBankin</h2>
-            <p>Create your account and enjoy secure, seamless banking at your fingertips.</p>
-        </div>
-
-        <div class="form-panel">
-            <h2>Create Account</h2>
-
-            <form id="signupForm" novalidate>
-                <div class="row">
-                    <div class="field">
-                        <input id="firstname" name="firstname" type="text" placeholder="First Name" required />
-                        <div class="error" id="firstnameErr"></div>
-                    </div>
-                    <div class="field">
-                        <input id="middlename" name="middlename" type="text" placeholder="Middle Name" />
-                        <div class="error" id="middlenameErr"></div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="field">
-                        <input id="lastname" name="lastname" type="text" placeholder="Last Name" required />
-                        <div class="error" id="lastnameErr"></div>
-                    </div>
-                    <div class="field full-width">
-                        <input id="email" name="email" type="email" placeholder="Email" class="full-width" required />
-                        <div class="error" id="emailErr"></div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="field">
-                        <input id="birth" name="birth" type="date" required />
-                        <div class="error" id="birthErr"></div>
-                    </div>
-                    <div class="field">
-                        <select id="gender" name="gender" required>
-                            <option value="">Select Gender</option>
-                            <option>Male</option>
-                            <option>Female</option>
-                        </select>
-                        <div class="error" id="genderErr"></div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="field">
-                        <input id="city" name="city" type="text" placeholder="City" required />
-                        <div class="error" id="cityErr"></div>
-                    </div>
-                    <div class="field">
-                        <input id="country" name="country" type="text" placeholder="Country" required />
-                        <div class="error" id="countryErr"></div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="field">
-                        <select id="accounttype" name="accounttype" required>
-                            <option value="">Account Type</option>
-                            <option>Savings</option>
-                            <option>Checking</option>
-                        </select>
-                        <div class="error" id="accounttypeErr"></div>
-                    </div>
-                    <div class="field">
-                        <select id="currency" name="currency" required>
-                            <option value="">Currency</option>
-                            <option>USD</option>
-                            <option>EUR</option>
-                            <option>NGN</option>
-                        </select>
-                        <div class="error" id="currencyErr"></div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="field">
-                        <input id="password" name="password" type="password" placeholder="Password"
-                            autocomplete="new-password" required />
-                        <div class="strength-wrap">
-                            <div class="strength-bar">
-                                <div id="strengthFill"></div>
-                            </div>
-                            <div class="strength-label" id="strengthLabel">Weak</div>
-                        </div>
-                        <div class="hint">Use 8+ chars with upper, lower, number, special.</div>
-                        <div class="error" id="passwordErr"></div>
-                    </div>
-                    <div class="field">
-                        <input id="password2" name="password2" type="password" placeholder="Confirm Password"
-                            autocomplete="new-password" required />
-                        <div class="error" id="password2Err"></div>
-                    </div>
-                </div>
-
-                <div class="field full-width">
-                    <input type="text" id="pin" name="pin" maxlength="4" pattern="\d{4}" inputmode="numeric"
-                        placeholder="Enter 4-digit PIN" required
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
-                    <div class="error" id="pinErr"></div>
-                </div>
-
-                <button id="submitBtn" type="submit" class="full-width">Sign Up</button>
-                <p class="muted">Have an account? <a class="link" id="Switcher">Sign in</a></p>
-            </form>
-
-            <div class="footer">
-                <strong>No Hidden Fees</strong>
-                Stay updated with text alerts, email notifications, online access, or call our 24/7 friendly support
-                team.
-            </div>
-        </div>
-    </div>
-
-    <!-- Spinner Modal -->
-    <div id="spinnerModal">
-        <div style="text-align:center">
-            <div class="spinner"></div>
-            <p>Loading, please wait…</p>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Make sure this path points to your keys (defines window.CONFIG) -->
-    <script src="config.js"></script>
-
-    <script type="module">
-
-        let pushEndpoint = null;
-        let pushP256dh = null;
-        let pushAuth = null;
-
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-        // ===== Supabase =====
-        const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-
-        // ===== URL Param & Switcher =====
-        let statusParam = null;
-        function getQueryParam(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            statusParam = urlParams.get("status");
-            return urlParams.get(name);
-        }
-        // initialize once for Switcher
-        getQueryParam("status");
-
-        document.getElementById('Switcher').addEventListener('click', () => {
-            if (statusParam) {
-                window.location.href = "login.html?status=none"; // suppress prompt on login page
-            } else {
-                window.location.href = "login.html";
-            }
-        });
-
-        // ===== Browser Detect (for instructions) =====
-        function detectBrowser() {
-            const ua = navigator.userAgent;
-            if (/edg/i.test(ua)) return "Edge";
-            if (/chrome|crios|crmo/i.test(ua)) return "Chrome";
-            if (/firefox|fxios/i.test(ua)) return "Firefox";
-            if (/safari/i.test(ua) && !/chrome|crios|crmo|edg/i.test(ua)) return "Safari";
-            return "this browser";
-        }
-
-        function showBlockedInstructions(browser) {
-            Swal.fire({
-                title: "❌ Notifications Permanently Blocked",
-                html: `
-          You have blocked notifications.<br><br>
-          To re-enable, go to <b>Site Settings</b> in ${browser} and allow notifications.<br><br>
-          <button id="retryBtn" style="margin-top:10px;padding:8px 12px;border:none;border-radius:8px;background:#0a8f4d;color:#fff;cursor:pointer;">
-            🔔 Retry Notification Prompt
-          </button>
-          <ul style="text-align:left; display:inline-block; margin-top:15px;">
-            <li><b>Chrome/Edge:</b> Click the padlock 🔒 → Site settings → Notifications → Allow.</li>
-            <li><b>Firefox:</b> Click the shield 🛡️ → Permissions → Allow notifications.</li>
-            <li><b>Safari (iOS/macOS):</b> Settings/System Settings → Notifications → Allow for this site.</li>
-          </ul>
-        `,
-                icon: "error",
-                showConfirmButton: false,
-                allowOutsideClick: true,
-                allowEscapeKey: true,
-                didOpen: () => {
-                    const btn = document.getElementById("retryBtn");
-                    if (btn) {
-                        btn.addEventListener("click", async () => {
-                            try {
-                                const perm = await Notification.requestPermission();
-                                if (perm === "granted") Swal.close();
-                            } catch (err) {
-                                console.error("Retry failed:", err);
-                            }
-                        }, { once: true });
-                    }
-                }
-            });
-        }
-
-        // ===== Notification Permission (non-blocking) =====
-        async function handleNotificationPermission() {
-            // if status is explicitly set to "none", skip any prompt
-            if (statusParam === "none") return;
-
-            // if no status parameter present (first-time visit), we can optionally nudge
-            if (statusParam === null || statusParam === "") {
-                if (!("Notification" in window)) return; // not supported → silently skip
-
-                const status = Notification.permission;
-                const browser = detectBrowser();
-
-                if (status === "default") {
-                    // gentle prompt; does not block page usage
-                    try {
-                        const result = await Swal.fire({
-                            title: "🔔 Enable Notifications",
-                            text: "Allow notifications to get important account alerts.",
-                            icon: "info",
-                            showCancelButton: true,
-                            confirmButtonText: "Allow",
-                            cancelButtonText: "Maybe later",
-                            allowOutsideClick: true,
-                            allowEscapeKey: true,
-                        });
-                        if (result.isConfirmed) {
-                            const perm = await Notification.requestPermission();
-                            if (perm === "denied") showBlockedInstructions(browser);
-                        }
-                    } catch (err) {
-                        console.warn("Notification prompt failed:", err);
-                    }
-                }
-
-                if (status === "denied") {
-                    showBlockedInstructions(browser);
-                }
-            }
-        }
-
-        // ===== Spinner =====
-        const spinner = document.getElementById('spinnerModal');
-        const showSpinner = () => spinner.style.display = 'flex';
-        const hideSpinner = () => spinner.style.display = 'none';
-
-        // ===== Password strength =====
-        const passwordEl = document.getElementById("password");
-        const strengthFill = document.getElementById("strengthFill");
-        const strengthLabel = document.getElementById("strengthLabel");
-
-        function passwordScore(pw) {
-            let s = 0;
-            if ((pw || '').length >= 8) s++;
-            if (/[A-Z]/.test(pw)) s++;
-            if (/[a-z]/.test(pw)) s++;
-            if (/[0-9]/.test(pw)) s++;
-            if (/[^A-Za-z0-9]/.test(pw)) s++;
-            return s; // 0–5
-        }
-        function updateStrengthMeter(pw) {
-            const score = passwordScore(pw);
-            const pct = (score / 5) * 100;
-            strengthFill.style.width = pct + "%";
-            strengthFill.style.background = pct < 40 ? "#ef4444" : pct < 80 ? "#f59e0b" : "#22c55e";
-            strengthLabel.textContent = pct < 40 ? "Weak" : pct < 80 ? "Medium" : "Strong";
-            return score;
-        }
-        updateStrengthMeter("");
-        passwordEl.addEventListener("input", (e) => updateStrengthMeter(e.target.value));
-
-        // ===== Validation helpers =====
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
-        const form = document.getElementById('signupForm');
-        const submitBtn = document.getElementById('submitBtn');
-
-        const els = {
-            firstname: document.getElementById('firstname'),
-            middlename: document.getElementById('middlename'),
-            lastname: document.getElementById('lastname'),
-            email: document.getElementById('email'),
-            birth: document.getElementById('birth'),
-            gender: document.getElementById('gender'),
-            city: document.getElementById('city'),
-            country: document.getElementById('country'),
-            accounttype: document.getElementById('accounttype'),
-            currency: document.getElementById('currency'),
-            password: document.getElementById('password'),
-            password2: document.getElementById('password2'),
-            pin: document.getElementById('pin'),
-        };
-
-        const errs = {
-            firstname: document.getElementById('firstnameErr'),
-            middlename: document.getElementById('middlenameErr'),
-            lastname: document.getElementById('lastnameErr'),
-            email: document.getElementById('emailErr'),
-            birth: document.getElementById('birthErr'),
-            gender: document.getElementById('genderErr'),
-            city: document.getElementById('cityErr'),
-            country: document.getElementById('countryErr'),
-            accounttype: document.getElementById('accounttypeErr'),
-            currency: document.getElementById('currencyErr'),
-            password: document.getElementById('passwordErr'),
-            password2: document.getElementById('password2Err'),
-            pin: document.getElementById('pinErr'),
-        };
-
-        function setErr(field, msg = '') {
-            errs[field].textContent = msg;
-        }
-        function required(v) {
-            return String(v || '').trim().length > 0;
-        }
-        function validatePin(v) {
-            return /^[0-9]{4}$/.test(String(v || '').trim());
-        }
-
-        function validateAll() {
-            // clear old
-            Object.keys(errs).forEach(k => setErr(k, ''));
-
-            let ok = true;
-            if (!required(els.firstname.value)) { setErr('firstname', 'First name is required'); ok = false; }
-            if (!required(els.lastname.value)) { setErr('lastname', 'Last name is required'); ok = false; }
-            if (!emailRegex.test(els.email.value)) { setErr('email', 'Enter a valid email'); ok = false; }
-            if (!required(els.birth.value)) { setErr('birth', 'Date of birth is required'); ok = false; }
-            if (!required(els.gender.value)) { setErr('gender', 'Please select gender'); ok = false; }
-            if (!required(els.city.value)) { setErr('city', 'City is required'); ok = false; }
-            if (!required(els.country.value)) { setErr('country', 'Country is required'); ok = false; }
-            if (!required(els.accounttype.value)) { setErr('accounttype', 'Select account type'); ok = false; }
-            if (!required(els.currency.value)) { setErr('currency', 'Select currency'); ok = false; }
-
-            const score = updateStrengthMeter(els.password.value);
-            if (score < 3) { setErr('password', 'Password too weak'); ok = false; }
-            if (els.password2.value !== els.password.value) { setErr('password2', 'Passwords do not match'); ok = false; }
-
-            if (!validatePin(els.pin.value)) { setErr('pin', 'PIN must be exactly 4 digits'); ok = false; }
-            return ok;
-        }
-
-        // live validation
-        [
-            'firstname', 'lastname', 'email', 'birth', 'gender', 'city', 'country',
-            'accounttype', 'currency', 'password', 'password2', 'pin'
-        ].forEach(id => els[id].addEventListener('input', validateAll));
-
-        // ===== Utils for Push =====
-        function urlBase64ToUint8Array(base64String) {
-            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-            const rawData = atob(base64);
-            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
-        }
-
-        async function subscribePushIfAllowed() {
-            try {
-                if (!('serviceWorker' in navigator) || !('Notification' in window)) return null;
-
-                // If user already granted, attempt subscription.
-                if (Notification.permission === 'default') {
-                    // don't block sign-up; just try to request once here
-                    try { await Notification.requestPermission(); } catch { }
-                }
-                if (Notification.permission !== 'granted') return null;
-
-                const reg = await navigator.serviceWorker.register('sw.js');
-                await navigator.serviceWorker.ready;
-
-                const vapidResp = await fetch('/vapidPublicKey');
-                if (!vapidResp.ok) return null;
-                const { key: vapidPublicKey } = await vapidResp.json();
-
-                const subscription = await reg.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
-                });
-
-                // Convert subscription
-                const subJSON = subscription.toJSON();
-
-                // 🔹 Save in global variables
-                pushEndpoint = subJSON.endpoint;
-                pushP256dh = subJSON.keys.p256dh;
-                pushAuth = subJSON.keys.auth;
-
-                return subscription.toJSON();
-            } catch (err) {
-                console.warn('Push subscription skipped:', err);
-                return null;
-            }
-        }
-
-        // ===== IP =====
-        async function getIP() {
-            try {
-                const resp = await fetch('https://ipapi.co/json/');
-                const data = await resp.json();
-                return data?.ip || '';
-            } catch {
-                return '';
-            }
-        }
-
-        // ===== Generators =====
-        function genCodes() {
-            const accountNumber = '937' + Math.floor(1000000 + Math.random() * 9000000);
-            const r = (n) => Math.floor(Math.random() * n);
-            const IMF = `IMF${r(1795)}wOd${r(105)}HS/A${r(3725)}`;
-            const TAX = `TAX${r(170395)}-GNC${r(1905)}XW${r(378825)}`;
-            const COT = `OPL${r(1795)}/COT${r(1905)}FVM/${r(3725)}`;
-            return { accountNumber, IMF, TAX, COT };
-        }
-
-        // ===== Submit =====
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            if (!validateAll()) {
-                Swal.fire('Fix errors', 'Please correct the highlighted fields.', 'warning');
-                return;
-            }
-
-            showSpinner();
-
-            const payload = {
-                firstname: els.firstname.value.trim(),
-                middlename: els.middlename.value.trim(),
-                lastname: els.lastname.value.trim(),
-                city: els.city.value.trim(),
-                country: els.country.value.trim(),
-                email: els.email.value.trim(),
-                dateOfBirth: els.birth.value,
-                gender: els.gender.value,
-                accttype: els.accounttype.value,
-                currency: els.currency.value,
-                pin: String(els.pin.value).trim(),
-                password: els.password.value
-            };
-
-            try {
-                // 1) Supabase Auth sign up
-                const { data: auth, error: authErr } = await supabase.auth.signUp({
-                    email: payload.email,
-                    password: payload.password
-                });
-                if (authErr) throw authErr;
-
-                const uuid = auth?.user?.id || (crypto?.randomUUID?.() ?? String(Date.now()));
-                const { accountNumber, IMF, TAX, COT } = genCodes();
-
-                // 2) Optional push subscription (non-blocking)
-                const subscriptionJSON = await subscribePushIfAllowed();
-
-                // 3) IP
-                const ip = await getIP();
-
-                // 4) Insert profile row
-                const { error: insertErr } = await supabase
-                    .from('onlinbanking')
-                    .insert([{
-                        firstname: payload.firstname,
-                        middlename: payload.middlename,
-                        lastname: payload.lastname,
-                        city: payload.city,
-                        country: payload.country,
-                        email: payload.email,
-                        dateOfBirth: payload.dateOfBirth,
-                        gender: payload.gender,
-                        accttype: payload.accttype,
-                        currency: payload.currency,
-                        pin: payload.pin,                 // ⚠️ consider hashing server-side
-                        password: payload.password,       // ⚠️ consider hashing/never store raw
-                        accountLevel: 'Starter',
-                        accountNumber, IMF, TAX, COT,
-                        date: new Date().toISOString(),
-                        ip, uuid,
-                        endpoint: pushEndpoint,
-                        p256dh: pushP256dh,
-                        notificationAuth: pushAuth,
-                    }]);
-
-                if (insertErr) throw insertErr;
-
-                // 5) send backend welcome message 
-                try {
-
-                    let formData2 = {
-                        email: payload.email,
-                        name: payload.firstname,
-                    }
-
-                    const options = {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-type': 'application/json'
-                        },
-                        body: JSON.stringify(formData2),
-                    }
-
-                    const response = await fetch('/register.html', options);
-
-                    console.log(response.ok)
-                    if (response.ok) {
-                        location.replace(`userNotifyRegistration.html?i=${i}`);
-
-                    } else {
-                        location.replace(`userNotifyRegistration.html?i=${i}`);
-                    }
-                } catch { /* ignore */ }
-
-                hideSpinner();
-                Swal.fire('🎉 Success', 'Sign-up completed! Please verify your email if required.', 'success')
-                    .then(() => {
-                        location.href = `https://onlinbankin.web.app/login.html?i=${dataBase.email}`;
-                    });
-
-            } catch (err) {
-                hideSpinner();
-                console.error(err);
-                Swal.fire('❌ Error', err.message || 'Something went wrong.', 'error');
-            }
-        });
-
-        // ===== Run on Page Load =====
-        handleNotificationPermission();
-    </script>
 </body>
 
 </html>

@@ -90,6 +90,7 @@
                         title: `OTP was sent to ${i}`,
                         icon: 'success'
                     }).then(() => {
+
                         if (ccd) {
                             location.replace(`/login/index.html?i=${i}&u=${u}`);
                         } else {
@@ -130,6 +131,7 @@
                     icon: 'error'
                 }).then(() => window.history.back());
             } else {
+                localStorage.removeItem("serviceObject");
                 if (ccd) {
                     location.replace("/bankDash/index.html");
                 } else {

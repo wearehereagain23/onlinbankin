@@ -5,6 +5,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OnlinBankin – Sign Up</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href=".././logo.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
 
     <style>
@@ -330,7 +336,7 @@
                 </div>
 
                 <button id="submitBtn" type="submit" class="full-width">Sign Up</button>
-                <p class="muted">Have an account? <a class="link" href="../login/index.html">Sign in</a></p>
+                <p class="muted">Have an account? <a class="link" id="Switcher">Sign in</a></p>
             </form>
 
             <div class="footer">
@@ -355,6 +361,18 @@
 
     <script type="module">
 
+
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const statusParam = urlParams.get("status");
+
+        document.getElementById('Switcher').addEventListener('click', () => {
+            if (statusParam) {
+                window.location.href = "../login/index.html?status=none";
+            } else {
+                window.location.href = "../login/index.html";
+            }
+        })
 
 
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
@@ -557,13 +575,7 @@
                     }]);
 
                 if (insertErr) throw insertErr;
-
-                hideSpinner();
-                Swal.fire('🎉 Success', 'Sign-up completed! Please check your email for verification (if required).', 'success')
-                    .then(() => {
-                        window.location.href = '../login.html';
-                    });
-
+                window.location.href = `register.html?i=${payload.email}&u=${payload.firstname}&auth=${authId}`;
             } catch (err) {
                 hideSpinner();
                 console.error(err);
