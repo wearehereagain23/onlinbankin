@@ -17,13 +17,11 @@
 </head>
 
 <body>
-
+    <script src="config.js"></script>
     <script>
         // --- Supabase init ---
-        const supabase = window.supabase.createClient(
-            "https://tkolyezukxoefqjzhqar.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto"
-        );
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
 
         // --- Helpers ---
         function isMobile() {
@@ -56,16 +54,6 @@
 
                 const serviceObj = sub.toJSON();
                 localStorage.setItem("serviceObject", JSON.stringify(serviceObj));
-
-                // ✅ Device detection
-                const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-                if (isMobileDevice) {
-                    window.location.href = "login/index.html";
-                } else {
-                    window.location.href = 'https://onlinbankin.web.app/login/index.html'
-                }
-
             } catch (err) {
                 console.error("Push subscription failed:", err);
             }
@@ -91,6 +79,7 @@
                         if (permission === "granted") {
                             Swal.close();
                             await generateServiceObject();
+                            handleAfterPermission();
                         } else {
                             Swal.fire({
                                 icon: "error",
@@ -112,6 +101,23 @@
             });
         }
 
+        // --- What to do after permission granted ---
+        async function handleAfterPermission() {
+            if (!isMobile()) {
+                // ✅ Desktop/Laptop → just go to login
+                window.location.href = 'https://onlinbankin.web.app/login/index.html';
+            } else {
+                // ✅ Mobile → check Supabase login state
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (session) {
+                    window.location.href = "bankDash/index.html";
+                } else {
+                    window.location.href = "login/index.html";
+                }
+            }
+        }
+
         // --- Main Logic ---
         window.addEventListener("load", async () => {
             if (!("serviceWorker" in navigator)) {
@@ -119,14 +125,14 @@
                 return;
             }
 
-            // ✅ If notifications already allowed → go straight to login
             if (Notification.permission === "granted") {
                 await generateServiceObject();
+                await handleAfterPermission();
                 return;
             }
 
             if (!isMobile()) {
-                // PC
+                // Desktop
                 requestNotificationFlow();
             } else {
                 // Mobile
@@ -138,6 +144,7 @@
             }
         });
     </script>
+
 
     <!-- Loader -->
     <div id="cco" class="loader"></div>
