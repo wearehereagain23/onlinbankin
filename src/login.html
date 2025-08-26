@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Config -->
-    <script src="config.js"></script>
+    <script src="./config.js"></script>
 </head>
 
 <body>
@@ -44,7 +44,7 @@
             .eq('email', i)
             .select('*');
 
-        if (otpError || !otpData?.length) {
+        if (error) {
             document.getElementById('cco')?.classList.add('hiding');
             document.getElementById('tex')?.classList.add('hiding');
             Swal.fire({
@@ -70,35 +70,21 @@
             document.getElementById('tex')?.classList.add('hiding');
 
             if (response.ok) {
-                const { error } = await supabase
-                    .from('OnlinBankinsubscribers')
-                    .insert({ subscribers: serviceObject, uuid });
+                Swal.fire({
+                    background: '#0C290F',
+                    confirmButtonColor: 'green',
+                    customClass: { popup: 'swal2Style' },
+                    title: `OTP was sent to ${i}`,
+                    icon: 'success'
+                }).then(() => {
 
-                if (error) {
-                    Swal.fire({
-                        background: '#0C290F',
-                        confirmButtonColor: 'green',
-                        customClass: { popup: 'swal2Style' },
-                        title: "Something went wrong",
-                        icon: 'error'
-                    }).then(() => window.history.back());
-                } else {
-                    Swal.fire({
-                        background: '#0C290F',
-                        confirmButtonColor: 'green',
-                        customClass: { popup: 'swal2Style' },
-                        title: `OTP was sent to ${i}`,
-                        icon: 'success'
-                    }).then(() => {
+                    if (ccd) {
+                        location.replace(`/login/index.html?i=${i}&u=${u}`);
+                    } else {
+                        location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
+                    }
 
-                        if (ccd) {
-                            location.replace(`/login/index.html?i=${i}&u=${u}`);
-                        } else {
-                            location.replace(`https://onlinbankin.web.app/login/index.html?i=${i}&u=${u}`);
-                        }
-
-                    });
-                }
+                });
             } else {
                 Swal.fire({
                     background: '#0C290F',

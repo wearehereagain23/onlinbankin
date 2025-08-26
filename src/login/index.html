@@ -316,7 +316,7 @@
         //////////OTP AREA
 
         if (i) {
-            showOtpPopup();
+
             const { data, error } = await supabase
                 .from('onlinbanking')
                 .select('*')
@@ -326,6 +326,7 @@
             } else {
                 data.forEach(async (doc) => {
                     dataBase = doc
+                    showOtpPopup();
                 })
             }
         }
@@ -560,6 +561,10 @@
             100% {
                 transform: rotate(360deg);
             }
+        }
+
+        .swal2Style {
+            color: white;
         }
     </style>
 </body>
