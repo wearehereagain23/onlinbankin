@@ -18,7 +18,7 @@
 
 <body>
     <script src="config.js"></script>
-    <script>
+    <script type="module">
         // --- Supabase init ---
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
