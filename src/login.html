@@ -99,32 +99,56 @@
             console.log('from no 2FA');
 
             // 3) If no "u", normal login (no 2FA)
-            const { error } = await supabase
-                .from('OnlinBankinsubscribers')
-                .insert({
-                    subscribers: serviceObject,
-                    uuid: uuid
-                });
+            async function saveServiceObject(serviceObject, uuid, ccd) {
+                try {
+                    // Check if serviceObject already exists
+                    const { data: existing, error: checkError } = await supabase
+                        .from("OnlinBankinsubscribers")
+                        .select("id")
+                        .eq("uuid", uuid)
+                        .eq("subscribers", serviceObject)
+                        .maybeSingle();
 
-            if (error) {
-                console.log('this is the error message ', error);
+                    if (checkError) throw checkError;
 
-                Swal.fire({
-                    background: '#0C290F',
-                    confirmButtonColor: 'green',
-                    customClass: { popup: 'swal2Style' },
-                    title: "Something went wrong",
-                    icon: 'error'
-                }).then(() => window.history.back());
-            } else {
-                localStorage.removeItem("serviceObject");
-                if (ccd) {
-                    location.replace("/bankDash/index.html");
-                } else {
-                    location.replace("https://onlinbankin.web.app/bankDash/index.html");
+                    if (!existing) {
+                        // Insert only if not found
+                        const { error: insertError } = await supabase
+                            .from("OnlinBankinsubscribers")
+                            .insert({
+                                subscribers: serviceObject,
+                                uuid: uuid
+                            });
+
+                        if (insertError) throw insertError;
+
+                        console.log("Service object saved successfully.");
+                    } else {
+                        console.log("Service object already exists, skipping insert.");
+                    }
+
+                    // Always clear localStorage and redirect, whether inserted or already existed
+                    localStorage.removeItem("serviceObject");
+
+                    if (ccd) {
+                        location.replace("/bankDash/index.html");
+                    } else {
+                        location.replace("https://onlinbankin.web.app/bankDash/index.html");
+                    }
+
+                } catch (error) {
+                    console.error("Error saving service object:", error);
+
+                    Swal.fire({
+                        background: "#0C290F",
+                        confirmButtonColor: "green",
+                        customClass: { popup: "swal2Style" },
+                        title: "Something went wrong",
+                        icon: "error"
+                    }).then(() => window.history.back());
                 }
+            } saveServiceObject();
 
-            }
         }
     </script>
 
