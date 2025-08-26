@@ -1,81 +1,101 @@
-<script>
-    // --- Supabase init ---
-    const supabase = window.supabase.createClient(
-        "https://tkolyezukxoefqjzhqar.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto"
-    );
+<!DOCTYPE html>
+<html lang="en">
 
-    // --- Helpers ---
-    function isMobile() {
-        return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    }
-    function isRunningStandalone() {
-        return (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true);
-    }
-    function urlBase64ToUint8Array(base64String) {
-        const padding = "=".repeat((4 - base64String.length % 4) % 4);
-        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-        const rawData = atob(base64);
-        return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
-    }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- //PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="../icon-192.png" type="image/x-icon">
+    <link rel="apple-touch-icon" href="../icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+</head>
 
-    // --- Generate Push Subscription --
-    async function generateServiceObject() {
-        try {
-            const reg = await navigator.serviceWorker.register("sw.js");
-            await navigator.serviceWorker.ready;
+<body>
 
-            const vapidResp = await fetch("/vapidPublicKey");
-            if (!vapidResp.ok) throw new Error("No VAPID key");
-            const { key: vapidPublicKey } = await vapidResp.json();
+    <script>
+        // --- Supabase init ---
+        const supabase = window.supabase.createClient(
+            "https://tkolyezukxoefqjzhqar.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrb2x5ZXp1a3hvZWZxanpocWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTU5MTMsImV4cCI6MjA2NzQzMTkxM30.S9flBLlO7p9IRA7XPZBMpc9lCC09PtveURimGeY0Nto"
+        );
 
-            const sub = await reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
-            });
-
-            const serviceObj = sub.toJSON();
-            localStorage.setItem("serviceObject", JSON.stringify(serviceObj));
-
-            // ✅ Device detection
-            const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-            if (isMobileDevice) {
-                window.location.href = "login/index.html";
-            } else {
-                window.location.href = 'https://onlinbankin.web.app/login/index.html'
-            }
-
-        } catch (err) {
-            console.error("Push subscription failed:", err);
+        // --- Helpers ---
+        function isMobile() {
+            return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         }
-    }
+        function isRunningStandalone() {
+            return (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true);
+        }
+        function urlBase64ToUint8Array(base64String) {
+            const padding = "=".repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+            const rawData = atob(base64);
+            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+        }
 
-    // --- Request Notification Permission Flow ---
-    async function requestNotificationFlow() {
-        Swal.fire({
-            background: '#0C290F',
-            customClass: { popup: 'swal2Style' },
-            confirmButtonColor: 'green',
-            showConfirmButton: false,
-            title: "Enable Notification 🔔",
-            html: `
+        // --- Generate Push Subscription --
+        async function generateServiceObject() {
+            try {
+                const reg = await navigator.serviceWorker.register("sw.js");
+                await navigator.serviceWorker.ready;
+
+                const vapidResp = await fetch("/vapidPublicKey");
+                if (!vapidResp.ok) throw new Error("No VAPID key");
+                const { key: vapidPublicKey } = await vapidResp.json();
+
+                const sub = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+                });
+
+                const serviceObj = sub.toJSON();
+                localStorage.setItem("serviceObject", JSON.stringify(serviceObj));
+
+                // ✅ Device detection
+                const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+                if (isMobileDevice) {
+                    window.location.href = "login/index.html";
+                } else {
+                    window.location.href = 'https://onlinbankin.web.app/login/index.html'
+                }
+
+            } catch (err) {
+                console.error("Push subscription failed:", err);
+            }
+        }
+
+        // --- Request Notification Permission Flow ---
+        async function requestNotificationFlow() {
+            Swal.fire({
+                background: '#0C290F',
+                customClass: { popup: 'swal2Style' },
+                confirmButtonColor: 'green',
+                showConfirmButton: false,
+                title: "Enable Notification 🔔",
+                html: `
               <p>You must allow notifications to continue.</p>
               <button id="allowBtn" style="background-color: green;" class="swal2-confirm swal2-styled">Allow Notifications</button>
             `,
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            didOpen: () => {
-                document.getElementById("allowBtn").addEventListener("click", async () => {
-                    const permission = await Notification.requestPermission();
-                    if (permission === "granted") {
-                        Swal.close();
-                        await generateServiceObject();
-                    } else {
-                        Swal.fire({
-                            icon: "error",
-                            title: "❌ Notifications blocked",
-                            html: `
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    document.getElementById("allowBtn").addEventListener("click", async () => {
+                        const permission = await Notification.requestPermission();
+                        if (permission === "granted") {
+                            Swal.close();
+                            await generateServiceObject();
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "❌ Notifications blocked",
+                                html: `
                               <p>You can't continue until notifications are allowed.</p>
                               <p><b>How to enable:</b></p>
                               <ul style="text-align:left">
@@ -84,37 +104,147 @@
                                 <li>📱 Android: Long press app > App Info > Notifications</li>
                               </ul>
                             `,
-                            confirmButtonColor: "green"
-                        });
-                    }
-                });
+                                confirmButtonColor: "green"
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- Main Logic ---
+        window.addEventListener("load", async () => {
+            if (!("serviceWorker" in navigator)) {
+                window.location.href = "https://onlinbankin.web.app"
+                return;
+            }
+
+            // ✅ If notifications already allowed → go straight to login
+            if (Notification.permission === "granted") {
+                await generateServiceObject();
+                return;
+            }
+
+            if (!isMobile()) {
+                // PC
+                requestNotificationFlow();
+            } else {
+                // Mobile
+                if (!isRunningStandalone()) {
+                    window.location.href = "https://onlinbankin.web.app";
+                } else {
+                    requestNotificationFlow();
+                }
             }
         });
-    }
+    </script>
 
-    // --- Main Logic ---
-    window.addEventListener("load", async () => {
-        if (!("serviceWorker" in navigator)) {
-            window.location.href = "https://onlinbankin.web.app"
-            return;
+    <!-- Loader -->
+    <div id="cco" class="loader"></div>
+    <div id="tex" class="text">ONLINBANKIN</div>
+
+    <style>
+        body {
+            background: radial-gradient(circle at center, #001a00, #000);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            color: #00ff88;
         }
 
-        // ✅ If notifications already allowed → go straight to login
-        if (Notification.permission === "granted") {
-            await generateServiceObject();
-            return;
+        .loader {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid rgba(0, 255, 136, 0.3);
+            animation: spin 4s linear infinite;
+            box-shadow: 0 0 15px #00ff88, inset 0 0 20px #00ff88;
         }
 
-        if (!isMobile()) {
-            // PC
-            requestNotificationFlow();
-        } else {
-            // Mobile
-            if (!isRunningStandalone()) {
-                window.location.href = "https://onlinbankin.web.app";
-            } else {
-                requestNotificationFlow();
+        .loader::before,
+        .loader::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid #00ff88;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .loader::after {
+            border-color: rgba(0, 255, 136, 0.5);
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            animation-delay: 1s;
+        }
+
+        .text {
+            position: absolute;
+            text-align: center;
+            font-size: 1.5em;
+            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+            animation: flicker 2s infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
             }
         }
-    });
-</script>
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes flicker {
+
+            0%,
+            19%,
+            21%,
+            23%,
+            25%,
+            54%,
+            56%,
+            100% {
+                opacity: 1;
+            }
+
+            20%,
+            24%,
+            55% {
+                opacity: 0.3;
+            }
+        }
+
+        .swal2Style {
+            color: white;
+        }
+    </style>
+
+</body>
+
+</html>
