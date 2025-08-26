@@ -1,61 +1,84 @@
 const url = window.location.search;
 const urldata = new URLSearchParams(url);
-const a = urldata.get("a")
-const p = urldata.get("p")
-const e = urldata.get("e")
-const i = urldata.get("i")
+const a = urldata.get("i");
 
+let subscriptions = [];
 
-let subscription = {
-    "endpoint": e,
-    "expirationTime": null,
-    "keys": {
-        "p256dh": p,
-        "auth": a
+// Fetch subscriptions from Supabase
+async function getSubers() {
+    const { data, error } = await supabase
+        .from('OnlinBankinsubscribers')
+        .select('*')
+        .eq('uuid', a);
+
+    if (error) {
+        console.error('Error fetching data:', error);
+    } else {
+        subscriptions = data.map(doc => ({
+            uuid: doc.uuid,
+            subscription: doc.subscribers // column in your table
+        }));
+
+        console.log("✅ Parsed subscriptions:", subscriptions);
     }
 }
+getSubers();
+
 
 // Handle "Send Notification" button click
 document.getElementById("notifyBtn").addEventListener("click", async () => {
-    if (!subscription) {
-        alert("Service Worker not ready yet!");
+    if (!subscriptions.length) {
+        alert("No subscribers found yet!");
         return;
     }
 
     const title = document.getElementById("titleInput").value || "📢 Default Title";
     const message = document.getElementById("messageInput").value || "Default notification message";
 
-    console.log("Sending custom notification to server...");
+    console.log("Sending notifications to all subscribers...");
 
     try {
-        const res = await fetch("/subscribe", {
-            method: "POST",
-            body: JSON.stringify({ subscription, title, message }),
-            headers: { "content-type": "application/json" }
-        });
+        // Send each subscription to server
+        for (const sub of subscriptions) {
+            const res = await fetch("/subscribe", {
+                method: "POST",
+                body: JSON.stringify({
+                    subscription: sub.subscription,
+                    uuid: sub.uuid,
+                    title,
+                    message
+                }),
+                headers: { "content-type": "application/json" }
+            });
 
-        if (!res.ok) throw new Error(`Server error: ${res.status}`);
-        console.log("✅ Custom notification request sent!");
-        //////// Notification to database
-        const { data, error } = await window.supabase
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        }
+
+        console.log("✅ Notifications sent to all subscribers!");
+
+        // Save notification log
+        const { error } = await window.supabase
             .from('onlinbankinNotification')
             .insert({
-                title: title,
-                message: message,
+                title,
+                message,
                 date: new Date(),
-                uuid: i,
-            })
+                uuid: a
+            });
+
         if (error) {
-            alert('something went wrong, if the continue please contact developer');
+            alert('Something went wrong, please contact developer');
         } else {
-            alert('notification sent!');
+            alert('Notification sent to all devices!');
+            document.getElementById("titleInput").value = "";
+            document.getElementById("messageInput").value = "";
         }
     } catch (err) {
         console.error("❌ Failed to send notification:", err);
         alert("❌ Failed to send notification, check console");
     }
-
 });
+
 
 // Helper: Convert base64 → Uint8Array
 function urlBase64ToUint8Array(base64String) {

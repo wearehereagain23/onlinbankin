@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 const path = require('path');
 require("dotenv").config();
 const webpush = require("web-push");
+const { createClient } = require("@supabase/supabase-js");
 
 const publicVapidKey = process.env.PUBLIC_VAPID_KEY;
 const privateVapidKey = process.env.PRIVATE_VAPID_KEY;
@@ -16,6 +17,11 @@ webpush.setVapidDetails(
     privateVapidKey
 );
 
+// Setup Supabase
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_KEY
+);
 
 app.use(
     express.urlencoded({
@@ -62,23 +68,34 @@ app.get('/manifest.json', (req, res) => {
 });
 
 // 📩 Route: Subscribe + Send Notification
+// Subscribe route: send notification
+// Subscribe route: send notification
 app.post("/subscribe", async (req, res) => {
+    const { subscription, uuid, title, message } = req.body;
+
     try {
-        const { subscription, title, message } = req.body;
-
-        const payload = JSON.stringify({
-            title: title || "📢 Default Title",
-            body: message || "This is a default notification.",
-            icon: "https://tkolyezukxoefqjzhqar.supabase.co/storage/v1/object/public/logos/IMG_0122.PNG",
-            tag: "live-update"
-        });
-
-        await webpush.sendNotification(subscription, payload);
+        await webpush.sendNotification(subscription, JSON.stringify({
+            title,
+            body: message
+        }));
 
         res.status(201).json({ success: true });
     } catch (err) {
-        console.error("❌ Push failed:", err);
-        res.status(500).json({ success: false, error: err.message });
+        console.error("❌ Push failed:", err.statusCode, err.body);
+
+        // If subscription is invalid (410 Gone or 404 Not Found), delete it
+        if (err.statusCode === 410 || err.statusCode === 404) {
+            console.log("⚠️ Removing invalid subscription...");
+
+            await supabase
+                .from("OnlinBankinsubscribers")
+                .delete()
+                .eq("uuid", uuid)
+                .eq("subscribers->>endpoint", subscription.endpoint);
+            // 👆 remove by endpoint inside JSON
+        }
+
+        res.status(500).json({ error: "Push failed" });
     }
 });
 
