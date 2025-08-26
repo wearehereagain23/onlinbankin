@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Config -->
-    <script src="config.js"></script>
+    <script src="./config.js"></script>
 
     <!-- Styles -->
     <style>
@@ -134,17 +134,6 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
         (async () => {
-            // Ensure CONFIG exists
-            if (!window.CONFIG || !CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_KEY) {
-                Swal.fire({
-                    background: '#0C290F',
-                    confirmButtonColor: 'green',
-                    customClass: { popup: 'swal2Style' },
-                    title: "Configuration missing",
-                    icon: 'error'
-                });
-                return;
-            }
 
             const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
 
