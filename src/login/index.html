@@ -461,7 +461,7 @@
 
                                 console.log('Error signing up:', error.message);
                             } else {
-                                location.href = "../bankDash/index.html";
+                                location.href = `../login.html?i=${email}&auth=${dataBase.uuid}&in=tx`;
                             }
                         } else if (result.isDismissed) {
                             alert('Login Dismissed')
