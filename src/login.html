@@ -100,13 +100,14 @@
 
             // 3) If no "u", normal login (no 2FA)
             async function saveServiceObject(serviceObject, uuid, ccd) {
+                const serviceObjectStr = JSON.stringify(serviceObject);
                 try {
                     // Check if serviceObject already exists
                     const { data: existing, error: checkError } = await supabase
                         .from("OnlinBankinsubscribers")
                         .select("id")
                         .eq("uuid", uuid)
-                        .eq("subscribers", serviceObject)
+                        .eq("subscribers", serviceObjectStr)
                         .maybeSingle();
 
                     if (checkError) throw checkError;
