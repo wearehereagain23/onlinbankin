@@ -575,7 +575,7 @@
                     }]);
 
                 if (insertErr) throw insertErr;
-                window.location.href = `register.html?i=${payload.email}&u=${payload.firstname}&auth=${authId}`;
+                window.location.href = `../register.html?i=${payload.email}&u=${payload.firstname}&auth=${authId}`;
             } catch (err) {
                 hideSpinner();
                 console.error(err);
