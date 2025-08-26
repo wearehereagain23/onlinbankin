@@ -290,7 +290,149 @@
                         <div class="error" id="cityErr"></div>
                     </div>
                     <div class="field">
-                        <input id="country" name="country" type="text" placeholder="Country" required />
+                        <select id="country" name="country" type="text" placeholder="Country" required>
+                            <option value="">-- Country --
+                            </option>
+                            <option value="United Kingdom">
+                                United Kingdom</option>
+                            <option value="United States of America">
+                                United States of America
+                            </option>
+                            <option value="Argentina">
+                                Argentina</option>
+                            <option value="Australia">
+                                Australia</option>
+                            <option value="Austria">
+                                Austria</option>
+                            <option value="Belgium">
+                                Belgium</option>
+                            <option value="Bolivia">
+                                Bolivia</option>
+                            <option value="Bosnia &amp; Herzegovina">
+                                Bosnia &amp; Herzegovina
+                            </option>
+                            <option value="Brazil">
+                                Brazil</option>
+                            <option value="Bulgaria">
+                                Bulgaria</option>
+                            <option value="Canada">
+                                Canada</option>
+                            <option value="Chile">Chile
+                            </option>
+                            <option value="China">China
+                            </option>
+                            <option value="Croatia">
+                                Croatia</option>
+                            <option value="Cyprus">
+                                Cyprus</option>
+                            <option value="Czech Republic">
+                                Czech Republic</option>
+                            <option value="Denmark">
+                                Denmark</option>
+                            <option value="Finland">
+                                Finland</option>
+                            <option value="France">
+                                France</option>
+                            <option value="Georgia">
+                                Georgia</option>
+                            <option value="Germany">
+                                Germany</option>
+                            <option value="Greece">
+                                Greece</option>
+                            <option value="Hong Kong">
+                                Hong Kong</option>
+                            <option value="Hungary">
+                                Hungary</option>
+                            <option value="Iceland">
+                                Iceland</option>
+                            <option value="India">India
+                            </option>
+                            <option value="Indonesia">
+                                Indonesia</option>
+                            <option value="Iran">Iran
+                            </option>
+                            <option value="Iraq">Iraq
+                            </option>
+                            <option value="Ireland">
+                                Ireland</option>
+                            <option value="Israel">
+                                Israel</option>
+                            <option value="Italy">Italy
+                            </option>
+                            <option value="Jamaica">
+                                Jamaica</option>
+                            <option value="Japan">Japan
+                            </option>
+                            <option value="Korea North">
+                                Korea North</option>
+                            <option value="Korea Sout">
+                                Korea South</option>
+                            <option value="Lesotho">
+                                Lesotho</option>
+                            <option value="Luxembourg">
+                                Luxembourg</option>
+                            <option value="Maldives">
+                                Maldives</option>
+                            <option value="Mexico">
+                                Mexico</option>
+                            <option value="Monaco">
+                                Monaco</option>
+                            <option value="Netherlands">
+                                Netherlands (Holland,
+                                Europe)</option>
+                            <option value="Norway">
+                                Norway</option>
+                            <option value="Oman">Oman
+                            </option>
+                            <option value="Paraguay">
+                                Paraguay</option>
+                            <option value="Peru">Peru
+                            </option>
+                            <option value="Poland">
+                                Poland</option>
+                            <option value="Portugal">
+                                Portugal</option>
+                            <option value="Qatar">Qatar
+                            </option>
+                            <option value="Republic of Serbia">
+                                Republic of Serbia
+                            </option>
+                            <option value="Romania">
+                                Romania</option>
+                            <option value="Russia">
+                                Russia</option>
+                            <option value="Serbia">
+                                Serbia</option>
+                            <option value="Singapore">
+                                Singapore</option>
+                            <option value="Slovakia">
+                                Slovakia</option>
+                            <option value="Slovenia">
+                                Slovenia</option>
+                            <option value="Spain">Spain
+                            </option>
+                            <option value="Sweden">
+                                Sweden</option>
+                            <option value="Switzerland">
+                                Switzerland</option>
+                            <option value="Thailand">
+                                Thailand</option>
+                            <option value="Turkey">
+                                Turkey</option>
+                            <option value="Ukraine">
+                                Ukraine</option>
+                            <option value="United Arab Erimates">
+                                United Arab Emirates
+                            </option>
+                            <option value="Uraguay">
+                                Uruguay</option>
+                            <option value="Vietnam">
+                                Vietnam</option>
+                            <option value="Yemen">Yemen
+                            </option>
+                            <option value="Zaire">Zaire
+                            </option>
+                        </select>
                         <div class="error" id="countryErr"></div>
                     </div>
                 </div>
@@ -299,17 +441,40 @@
                     <div class="field">
                         <select id="accounttype" name="accounttype" required>
                             <option value="">Account Type</option>
-                            <option>Savings</option>
-                            <option>Checking</option>
+
+                            <option value="Online">
+                                Online Account</option>
+                            <option value="Savings">
+                                Savings Account</option>
+                            <option value="Checking">
+                                Checking Account
+                            </option>
+                            <option value="Current">
+                                Current Account</option>
+                            <option value="Corporate">
+                                Corporate Account
+                            </option>
+                            <option value="Offshore">
+                                Offshore Account
+                            </option>
+                            <option value="Joint">Joint
+                                Account</option>
                         </select>
                         <div class="error" id="accounttypeErr"></div>
                     </div>
                     <div class="field">
                         <select id="currency" name="currency" required>
                             <option value="">Currency</option>
-                            <option>USD</option>
-                            <option>EUR</option>
-                            <option>NGN</option>
+                            <option value="$">US Dollar
+                                ($)</option>
+                            <option value="&pound;">
+                                Pound Sterling (&#163;)
+                            </option>
+                            <option value="&#128;">Euro
+                                (&#128;)</option>
+                            <option value="&#165;">
+                                Japanese Yen (&#165;)
+                            </option>
                         </select>
                         <div class="error" id="currencyErr"></div>
                     </div>
@@ -354,13 +519,56 @@
         </div>
     </div>
 
-    <!-- Spinner Modal -->
-    <div id="spinnerModal">
-        <div style="text-align:center">
+    <!-- SPINNER DIV -->
+    <div id="spinnerModal" class="spinner-modal" style="display: none;">
+        <div class="spinner-content">
             <div class="spinner"></div>
-            <p>Loading, please wait…</p>
+            <p>Loading, please wait...</p>
         </div>
     </div>
+    <!-- SPINNER DIV -->
+
+    <!-- SPINNER CSS -->
+    <style>
+        .spinner-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner-content {
+            text-align: center;
+            color: white;
+        }
+
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #ffffff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Must define window.CONFIG = { SUPABASE_URL, SUPABASE_KEY } -->
