@@ -982,7 +982,7 @@ app.post('/login', async (req, res) => {
 
 //FORGOTTEN PASSWORD OTP MESSAGE
 
-app.post('/password.html', async (req, res) => {
+app.post('/password', async (req, res) => {
 
 
     let info = req.body

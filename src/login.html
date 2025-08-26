@@ -38,7 +38,7 @@
         const serviceObject = serviceObjString ? JSON.parse(serviceObjString) : {};
 
         // 1) Update OTP for user
-        const { data: otpData, error: otpError } = await supabase
+        const { data, error } = await supabase
             .from('onlinbanking')
             .update({ otp: OTP })
             .eq('email', i)
